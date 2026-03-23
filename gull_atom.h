@@ -1,5 +1,5 @@
-#ifndef _ATOM_TYPE_H
-#define _ATOM_TYPE_H 1
+#ifndef _GULL_ATOM_H
+#define _GULL_ATOM_H 1
 
 #include <stddef.h>
 #include <stdint.h>
@@ -77,7 +77,8 @@ typedef struct {
         return (atom *) (size_t) (_atom->_atom_##index << off);              \
     }                                                                        \
     static inline atom * _atom_set_a##index(atom * _atom, atom * _value) {   \
-        return (atom *) (_atom->_atom_##index = ((size_t) _value >> off));   \
+        return (atom *) (size_t)                                             \
+            (_atom->_atom_##index = (size_t) _value >> off);                 \
     }
 
 _ATOM_MEMBER_ACCESS(1_1)
@@ -145,8 +146,8 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_set_node_key _atom_set_s3
 #define _atom_get_node_color _atom_get_s4_1
 #define _atom_set_node_color _atom_set_s4_1
-#define _atom_set_node_black(_atom) _atom_set_s4_1(_atom, 0)
-#define _atom_set_node_red(_atom) _atom_set_s4_1(_atom, 1)
+#define _atom_set_node_black(atom) _atom_set_s4_1(atom, 0)
+#define _atom_set_node_red(atom) _atom_set_s4_1(atom, 1)
 #define _atom_get_node_value _atom_get_a4_3
 #define _atom_set_node_value _atom_set_a4_3
 #define _atom_get_node_left _atom_get_a5
@@ -254,10 +255,10 @@ static inline size_t
 }
 
 #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
-    #define _atom_get_clock_second _atom_get_s2
-    #define _atom_set_clock_second _atom_set_s2
-    #define _atom_get_clock_nano _atom_get_s3
-    #define _atom_set_clock_nano _atom_set_s3
+    #define _atom_get_clock_second (uint64_t) _atom_get_s2
+    #define _atom_set_clock_second (uint64_t) _atom_set_s2
+    #define _atom_get_clock_nano (uint64_t) _atom_get_s3
+    #define _atom_set_clock_nano (uint64_t) _atom_set_s3
 #else
     #define _ATOM_CLOCK_ACCESS(name, pointer)                                \
         static inline uint64_t _atom_get_##name(atom * _atom) {              \
