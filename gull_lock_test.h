@@ -36,7 +36,7 @@ void gull_lock_test() {
     lock _test;
     _lock_initial(&_test);
 
-    if (_lock_try(&_test, (size_t) pthread_self())) {
+    if (_lock_try(&_test, (size_t) pthread_self()) == 0) {
         printf("第一次 _lock_try 成功\n");
         _lock_end(&_test);
     } else {
@@ -50,7 +50,7 @@ void gull_lock_test() {
     struct timespec _request_timespec = {0, 100000000}, _remain_timespec = {0};
     nanosleep(&_request_timespec, &_remain_timespec);
 
-    if (_lock_try(&_test, (size_t) pthread_self())) {
+    if (_lock_try(&_test, (size_t) pthread_self()) == 0) {
         printf("第二次 _lock_try 成功\n");
         _lock_end(&_test);
     } else {

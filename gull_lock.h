@@ -47,7 +47,7 @@ static inline size_t _lock_try(lock * _lock, size_t _thread_id) {
         &_lock->_lock_atomic, memory_order_acquire); /* 获取当前上锁的值 */
     /* 空线程或者相同线程可以得到锁，否则记作失败 */
     if (_locked != 0 && _locked != _thread_id) {
-        return 0;
+        return _locked;
     }
     /* 如果 _lock->_lock_atomic == _locked 那么写入 _thread_id */
     if (atomic_compare_exchange_strong_explicit(
@@ -57,7 +57,7 @@ static inline size_t _lock_try(lock * _lock, size_t _thread_id) {
     } else {
         goto _loop;
     }
-    return _thread_id; /* 成功后返回非零数值 */
+    return 0; /* 成功后返回零 */
 }
 
 /* 解锁，必须和上锁处于同一个线程下 */

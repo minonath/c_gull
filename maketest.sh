@@ -1,4 +1,5 @@
 #!/bin/bash
 
 cd "$(dirname "$0")"
-make once
+make test
+make clean

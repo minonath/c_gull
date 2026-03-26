@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-/**
+/*
 Gull 使用六个或者三个指针长度的结构储存数据
 
 下面是原子内存的使用方式
@@ -297,5 +297,176 @@ static inline size_t
 #undef _ATOM_INTEGER_ACCESS
 #undef _ATOM_DOUBLE_ACCESS
 #undef _ATOM_BRIEF_ACCESS
+
+/*
+占用三个指针长度的原子称为单原子，占用六个，指针长度的原子称为双原子
+
+4 的二进制是 0b100 ，所有 4 的整数倍，二进制最后 2 位都是 0
+8 的二进制是 0b1000 ，所有 8 的整数倍，二进制最后 3 位都是 0
+16 的二进制是 0b10000 ，所有 16 的整数倍，二进制最后 4 位都是 0
+
+在 32-bits 系统下，单原子占用 12 个字节 (byte)
+12 是 4 的整数倍，而不是 8 的整数倍，尽管 12 比 8 大
+所以，单原子地址二进制最后两位是零，倒数第三位，是 1 和 0 交错，比如：
+    第一个单原子的地址是 0b000000
+    第二个单原子的地址是 0b001100
+    第三个单原子的地址是 0b011000
+    第四个单原子的地址是 0b100100
+    第五个单原子的地址是 0b110000
+也就是说，单原子如果紧密排列，奇数位数的原子地址倒数第三位是 0 ，偶数是 1
+以此可以判断单原子的奇偶性
+所以这里设定，32-bits 系统中双原子的倒数三位都是 0
+这样双原子就可以使用两个单原子拼凑而得到
+
+64-bits 系统中，单原子占用 24 个字节 (byte)，所以：
+    第一个单原子的地址是 0b0000000
+    第二个单原子的地址是 0b0011000
+    第三个单原子的地址是 0b0110000
+    第四个单原子的地址是 0b1001000
+    第五个单原子的地址是 0b1100000
+也就相当于把前面的数据全部提前一位，判断依据就变成倒数第四位了
+
+由此，可以通过单原子地址，寻找成对单原子地址，也就是 _atom_pair 函数
+*/
+
+#if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
+    #define _atom_pair(memory) \
+        ((atom *) (((size_t) memory) & 0b1000 ? \
+            ((size_t) memory) - 24 : ((size_t) memory) + 24))
+#else
+    #define _atom_pair(memory) \
+        ((atom *) (((size_t) memory) & 0b100 ? \
+            ((size_t) memory) - 12 : ((size_t) memory) + 12))
+#endif
+
+/*
+原子回收时，需要把它们当作双向链表存入一个地址里，方便再次提取使用
+因此这里有双向链表操作，还有 base 具有单向链表操作
+*/
+static atom * _atom_recycle_push(atom ** _root, atom * _atom) {
+    _atom_set_recycle_previous(_atom, 0); /* 插入时初始化 */
+    _atom_set_recycle_next(_atom, *_root);
+    if (*_root) {
+        _atom_set_recycle_previous(*_root, _atom);
+    }
+    return *_root = _atom; /* 插入链表头 */
+}
+
+/* 取出链表头，此函数调用前需要确保链表不为空 */
+static atom * _atom_recycle_pop(atom ** _root) {
+    atom * _atom = *_root;
+    if ((*_root = _atom_get_recycle_next(_atom))) {
+        _atom_set_recycle_previous(*_root, 0);
+        _atom_set_recycle_next(_atom, 0); /* 清除链表特征 */
+    }
+    return _atom;
+}
+
+/* 插入链表尾 */
+static atom * _atom_recycle_append(atom ** _root, atom * _atom) {
+    if (*_root) {
+        atom * _target = *_root;
+        while (_atom_get_recycle_next(_target)) {
+            _target = _atom_get_recycle_next(_target);
+        }
+        _atom_set_recycle_next(_target, _atom);
+        _atom_set_recycle_previous(_atom, _target);
+    } else {
+        *_root = _atom;
+        _atom_set_recycle_previous(_atom, 0);
+    }
+    _atom_set_recycle_next(_atom, 0);
+    return _atom;
+}
+
+/* 从链表中移除，需要确保移除原子在链表中 */
+static atom * _atom_recycle_remove(atom ** _root, atom * _atom) {
+    if (*_root == _atom) {
+        if ((*_root = _atom_get_recycle_next(_atom))) {
+            _atom_set_recycle_previous(*_root, 0);
+            _atom_set_recycle_next(_atom, 0);
+        }
+    } else {
+        if (_atom_set_recycle_next(
+                _atom_get_recycle_previous(_atom),
+                _atom_get_recycle_next(_atom))) {
+            _atom_set_recycle_previous(
+                _atom_get_recycle_next(_atom),
+                _atom_get_recycle_previous(_atom));
+            _atom_set_recycle_next(_atom, 0);
+        }
+        _atom_set_recycle_previous(_atom, 0);
+    }
+    return _atom;
+}
+
+static atom * _atom_pair_push(atom ** _root, atom * _atom) {
+    _atom_set_pair_previous(_atom, 0); /* 插入时初始化 */
+    _atom_set_pair_next(_atom, *_root);
+    if (*_root) {
+        _atom_set_pair_previous(*_root, _atom);
+    }
+    return *_root = _atom; /* 插入链表头 */
+}
+
+static atom * _atom_pair_pop(atom ** _root) {
+    atom * _atom = *_root;
+    if ((*_root = _atom_get_pair_next(_atom))) {
+        _atom_set_pair_previous(*_root, 0);
+        _atom_set_pair_next(_atom, 0); /* 清除链表特征 */
+    }
+    return _atom;
+}
+
+static atom * _atom_pair_append(atom ** _root, atom * _atom) {
+    if (*_root) {
+        atom * _target = *_root;
+        while (_atom_get_pair_next(_target)) {
+            _target = _atom_get_pair_next(_target);
+        }
+        _atom_set_pair_next(_target, _atom);
+        _atom_set_pair_previous(_atom, _target);
+    } else {
+        *_root = _atom;
+        _atom_set_pair_previous(_atom, 0);
+    }
+    _atom_set_pair_next(_atom, 0);
+    return _atom;
+}
+
+static atom * _atom_pair_remove(atom ** _root, atom * _atom) {
+    if (*_root == _atom) {
+        if ((*_root = _atom_get_pair_next(_atom))) {
+            _atom_set_pair_previous(*_root, 0);
+            _atom_set_pair_next(_atom, 0);
+        }
+    } else {
+        if (_atom_set_pair_next(
+                _atom_get_pair_previous(_atom), _atom_get_pair_next(_atom))) {
+            _atom_set_pair_previous(
+                _atom_get_pair_next(_atom), _atom_get_pair_previous(_atom));
+            _atom_set_pair_next(_atom, 0);
+        }
+        _atom_set_pair_previous(_atom, 0);
+    }
+    return _atom;
+}
+
+/* 单链表只会插入链表尾 */
+static atom * _atom_base_append(atom ** _root, atom * _atom) {
+    if (*_root) {
+        atom * _target = *_root;
+        while (_atom_get_base_next(_target)) {
+            _target = _atom_get_base_next(_target);
+        }
+        _atom_set_base_next(_target, _atom);
+        /* _atom_set_pair_previous(_atom, _target); // 此行被禁止 */
+    } else {
+        *_root = _atom;
+        /* _atom_set_pair_previous(_atom, 0); // 此行被禁止 */
+    }
+    _atom_set_base_next(_atom, 0);
+    return _atom;
+}
 
 #endif

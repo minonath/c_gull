@@ -38,6 +38,4 @@ void gull_signature_test() {
     printf("%s\n\n", _string);
 }
 
-
-
 #endif

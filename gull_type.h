@@ -1,0 +1,147 @@
+#ifndef _TYPE_H
+#define _TYPE_H 1
+
+#define _TYPE_INFO_RECYCLE 0
+#define _TYPE_INFO_FULL 1
+#define _TYPE_INFO_HALF 2
+#define _TYPE_INFO_MISC 3
+
+#if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
+    #define _TYPE_INFO_CLOCK 4
+#else
+    #define _TYPE_INFO_INT64 4
+    #define _TYPE_INFO_UINT64 5
+    #define _TYPE_INFO_DOUBLE 6
+    #define _TYPE_INFO_BRIEF_32 7
+#endif
+
+#define _TYPE_RECYCLE 0
+#define _TYPE_MISC 2
+
+#define _TYPE_PAGE 4
+
+#define _TYPE_KEYWORDS 8
+#define _KEYWORD_SEPARATOR 9
+#define _KEYWORD_WORD 10
+#define _KEYWORD_BASE 11
+#define _KEYWORD_ACCESS 12
+#define _KEYWORD_EXECUTE_L 13
+#define _KEYWORD_EXECUTE_R 14
+#define _KEYWORD_SEQUENCE_L 15
+#define _KEYWORD_SEQUENCE_R 16
+#define _KEYWORD_SYNCHRONIC_L 17
+#define _KEYWORD_SYNCHRONIC_R 18
+#define _KEYWORD_STATIC_L 19
+#define _KEYWORD_STATIC_R 20
+#define _KEYWORD_COMMENT 21
+#define _KEYWORD_ASSIST 22
+#define _KEYWORD_EXPLAIN 23
+#define _KEYWORD_INTERPRET 24
+#define _KEYWORD_EXTEND 25
+#define _KEYWORD_MARK 26
+#define _KEYWORD_JUMP 27
+#define _KEYWORD_RETURN 28
+#define _KEYWORD_CANCEL 29
+#define _KEYWORD_LIMIT 30
+#define _KEYWORD_TEXT _KEYWORD_LIMIT
+#define _KEYWORD_EOF 31
+
+#define _TYPE_LINE 32
+#define _TYPE_TAIL 33
+#define _TYPE_EXECUTE 34
+#define _TYPE_SEQUENCE 35
+#define _TYPE_SYNCHRONIC 36
+#define _TYPE_STATIC 37
+#define _TYPE_QUICK 38
+#define _TYPE_COMMENT 39
+#define _TYPE_EXPLAIN 40
+#define _TYPE_INTERPRET 41
+#define _TYPE_EXTEND 42
+#define _TYPE_EXTEND_EXPLAIN 43
+#define _TYPE_EXTEND_INTERPRET 44
+#define _TYPE_MARK 45
+#define _TYPE_JUMP 46
+#define _TYPE_RETURN 47
+#define _TYPE_PHRASE 48
+#define _TYPE_ACCESS 49
+
+#define _TYPE_GOTO 50
+#define _TYPE_BASE 51
+
+/* 判断代码是否可以添加尾缀，形成连续链条 */
+static inline size_t _atom_allow_code_access(atom * _atom) {
+    return _atom->_atom_2 >= _TYPE_COMMENT &&
+        _atom->_atom_2 <= _TYPE_ACCESS;
+}
+
+/* 判断代码是否允许 QUICK 出现 */
+static inline size_t _atom_allow_code_quick(atom * _atom) {
+    return _atom->_atom_2 >= _TYPE_COMMENT &&
+        _atom->_atom_2 <= _TYPE_PHRASE;
+}
+
+/* 判断代码是否允许返回前一个链条 */
+static inline size_t _atom_allow_code_up(atom * _atom) {
+    return _atom->_atom_2 >= _TYPE_EXECUTE &&
+        _atom->_atom_2 <= _TYPE_STATIC;
+}
+
+/* 判断代码是否可用于状态记录 */
+static inline size_t _atom_allow_state_record(atom * _atom) {
+    return _atom->_atom_2 == _TYPE_LINE ||
+        _atom->_atom_2 == _TYPE_TAIL ||
+        _atom->_atom_2 == _TYPE_ACCESS;
+}
+
+#define _TYPE_BRIEF 64
+#define _TYPE_TEXT 65
+#define _TYPE_BYTES 66
+#define _TYPE_CACHE 67
+#define _TYPE_CLOCK 68
+
+#define _TYPE_PAIR 80
+#define _TYPE_STRUCTURE 81
+#define _TYPE_SHARED 82
+
+#define _TYPE_CONTAINER_SIZE 10
+#define _TYPE_CONTAINER_0 96
+#define _TYPE_CONTAINER_1 97
+#define _TYPE_CONTAINER_2 98
+#define _TYPE_CONTAINER_3 99
+#define _TYPE_CONTAINER_4 100
+#define _TYPE_CONTAINER_5 101
+#define _TYPE_CONTAINER_6 102
+#define _TYPE_CONTAINER_7 103
+#define _TYPE_CONTAINER_8 104
+#define _TYPE_CONTAINER_9 105
+// #define _TYPE_CONTAINER_10 106
+// #define _TYPE_CONTAINER_11 107
+// #define _TYPE_CONTAINER_12 108
+// #define _TYPE_CONTAINER_13 109
+// #define _TYPE_CONTAINER_14 110
+// #define _TYPE_CONTAINER_15 111
+#define _TYPE_LIST _TYPE_CONTAINER_0
+#define _TYPE_MAP _TYPE_CONTAINER_1
+#define _TYPE_SET _TYPE_CONTAINER_2
+#define _TYPE_CLASS _TYPE_CONTAINER_3
+#define _TYPE_INSTANCE _TYPE_CONTAINER_4
+#define _TYPE_CONTAINER_DEFINED 5
+
+#define _TYPE_BIT 112
+#define _TYPE_CHAR 113
+#define _TYPE_SHORT 114
+#define _TYPE_INTEGER 115
+#define _TYPE_LONG 116
+#define _TYPE_UNSGINED_CHAR 117
+#define _TYPE_UNSGINED_SHORT 118
+#define _TYPE_UNSGINED_INTEGER 119
+#define _TYPE_UNSGINED_LONG 120
+#define _TYPE_FLOAT 121
+#define _TYPE_DOUBLE 122
+
+#define _TYPE_DECIMAL 123
+#define _TYPE_DECIMAL_NEGATIVE 124
+#define _TYPE_FRACTION 125
+#define _TYPE_FRACTION_NEGATIVE 126
+
+#endif

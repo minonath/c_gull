@@ -95,6 +95,27 @@ void gull_atom_test() {
     _ATOM_MEMBER_TEST(%u, brief_protect, -1); // 255
     strcpy(_brief, "hello meow");
     printf("brief new\t%s\n", _brief);
+
+    atom _m0 = {0};
+    atom _m1 = {0};
+    atom _m2 = {0};
+    atom _m3 = {0};
+    atom * _root = 0;
+    _atom_recycle_push(&_root, &_m0);
+    _atom_recycle_push(&_root, &_m1);
+    _atom_recycle_push(&_root, &_m2);
+    _atom_recycle_push(&_root, &_m3);
+    printf("取出 m3 %p %p\n", &_m3, _atom_recycle_pop(&_root));
+    printf("取出 m1 %p %p\n", &_m1, _atom_recycle_remove(&_root, &_m1));
+    printf("取出 m2 %p %p\n", &_m2, _atom_recycle_remove(&_root, &_m2));
+    _atom_recycle_push(&_root, &_m3);
+    _atom_recycle_append(&_root, &_m2);
+    _atom_recycle_append(&_root, &_m1);
+    printf("取出 m3 %p %p\n", &_m3, _atom_recycle_pop(&_root));
+    printf("取出 m0 %p %p\n", &_m0, _atom_recycle_pop(&_root));
+    printf("取出 m2 %p %p\n", &_m2, _atom_recycle_pop(&_root));
+    printf("取出 m1 %p %p\n", &_m1, _atom_recycle_pop(&_root));
+    printf("%p\n", _root);
 }
 
 #undef _ATOM_MEMBER_TEST
