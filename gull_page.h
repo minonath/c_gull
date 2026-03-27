@@ -1,5 +1,5 @@
-#ifndef _GULL_PAGE
-#define _GULL_PAGE 1
+#ifndef _GULL_PAGE_H
+#define _GULL_PAGE_H 1
 
 /* 如果不是 windows 系统，需要导入 mman 操作内存 */
 #if !defined(_WIN32) && !defined(_WIN64)
@@ -609,8 +609,8 @@ static inline atom * _page_allocate_bind(
     _atom_set_atom_info(_atom, _TYPE_INFO_FULL);
     _atom_set_atom_reference(_atom, 0);
     _atom_set_atom_type(_atom, _type);
-    _atom_set_s3(_atom, 0);
-    _atom_set_s4(_atom, 0);
+    // _atom_set_s3(_atom, 0);
+    // _atom_set_s4(_atom, 0);
     _atom_set_extra_address(_atom, _extra + 1);
     _atom_set_extra_size(_atom, *_extra - sizeof(size_t));
     _page_extra_bind(_extra, _atom); // *_extra = ((size_t) _atom) | 1;

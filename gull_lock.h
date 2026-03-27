@@ -1,5 +1,5 @@
-#ifndef _GULL_LOCK
-#define _GULL_LOCK 1
+#ifndef _GULL_LOCK_H
+#define _GULL_LOCK_H 1
 
 #include <pthread.h>
 #include <sched.h>

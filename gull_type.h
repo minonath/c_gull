@@ -1,5 +1,5 @@
-#ifndef _TYPE_H
-#define _TYPE_H 1
+#ifndef _GULL_TYPE_H
+#define _GULL_TYPE_H 1
 
 #define _TYPE_INFO_RECYCLE 0
 #define _TYPE_INFO_FULL 1
