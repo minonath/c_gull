@@ -1,6 +1,7 @@
 #ifndef _GULL_CACHE_TEST_H
 #define _GULL_CACHE_TEST_H 1
 
+#include <stdio.h>
 #include "gull_cache.h"
 
 void gull_cache_test() {

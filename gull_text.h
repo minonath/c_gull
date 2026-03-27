@@ -680,8 +680,4 @@ static int _text_read_char(
     }
 }
 
-
-
-
-
 #endif

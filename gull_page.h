@@ -283,7 +283,7 @@ static inline void _page_recycle_extend(page * _extend) {
         if (_page_free(_extend, _thread->_page_size)) {
             return;
         } else if (_thread->_page_recycle_limit == -1) {
-            printf("系统内存异常溢出\n");
+            // printf("系统内存异常溢出\n");
             raise(SIGABRT);
         } else {
             _thread->_page_recycle_limit += 1;
