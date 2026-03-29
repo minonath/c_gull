@@ -60,11 +60,11 @@ void gull_page_test() {
     atom * _atom_bind[_C] = {0};
     for (int _i = 0; _i < _C; _i ++) {
         _atom_double[_i] = _page_allocate_double(_process);
-        _atom_set_atom_info(_atom_double[_i], _TYPE_INFO_FULL);
-        _atom_set_atom_type(_atom_double[_i], _TYPE_MAP);
+        _atom_set_info(_atom_double[_i], _TYPE_INFO_FULL);
+        _atom_set_type(_atom_double[_i], _TYPE_MAP);
         _atom_single[_i] = _page_allocate_single(_process);
-        _atom_set_atom_info(_atom_single[_i], _TYPE_INFO_HALF);
-        _atom_set_atom_type(_atom_single[_i], _TYPE_LONG);
+        _atom_set_info(_atom_single[_i], _TYPE_INFO_HALF);
+        _atom_set_type(_atom_single[_i], _TYPE_LONG);
         _atom_bind[_i] = _page_allocate_bind(
             _process, _TYPE_TEXT, rand() % 210);
     }
@@ -81,11 +81,11 @@ void gull_page_test() {
 
     for (int _i = _C / 3; _i < _C; _i ++) {
         _atom_double[_i] = _page_allocate_double(_process);
-        _atom_set_atom_info(_atom_double[_i], _TYPE_INFO_FULL);
-        _atom_set_atom_type(_atom_double[_i], _TYPE_MAP);
+        _atom_set_info(_atom_double[_i], _TYPE_INFO_FULL);
+        _atom_set_type(_atom_double[_i], _TYPE_MAP);
         _atom_single[_i] = _page_allocate_single(_process);
-        _atom_set_atom_info(_atom_single[_i], _TYPE_INFO_HALF);
-        _atom_set_atom_type(_atom_single[_i], _TYPE_LONG);
+        _atom_set_info(_atom_single[_i], _TYPE_INFO_HALF);
+        _atom_set_type(_atom_single[_i], _TYPE_LONG);
         _atom_bind[_i] = _page_allocate_bind(
             _process, _TYPE_TEXT, rand() % 210);
     }

@@ -13,9 +13,9 @@
 void gull_atom_test() {
     atom _test = {0};
 
-    _ATOM_MEMBER_TEST(%zu, atom_info, 5);
-    _ATOM_MEMBER_TEST(%zu, atom_reference, 12345);
-    _ATOM_MEMBER_TEST(%zu, atom_type, 0x11111); // 69905
+    _ATOM_MEMBER_TEST(%zu, info, 5);
+    _ATOM_MEMBER_TEST(%zu, reference, 12345);
+    _ATOM_MEMBER_TEST(%zu, type, 0x11111); // 69905
 
     _ATOM_MEMBER_TEST(%p, recycle_previous, (atom *) 0x22222);
     _ATOM_MEMBER_TEST(%p, recycle_next, (atom *) 0x33333);

@@ -1,21 +1,20 @@
 #ifndef _GULL_TEXT_TEST_H
 #define _GULL_TEXT_TEST_H 1
 
-#include <stdio.h>
 #include "gull_text.h"
 
 void gull_text_test() {
     page * _process = _page_allocate_process(_PAGE_SIZE_4K, 12);
-    atom * _t1 = _atom_text_build(_process, 15, 0, "hello meow 1234567890");
+    atom * _t1 = _text_build(_process, 15, 0, "hello meow 1234567890");
     printf("%s\n", _atom_get_brief_address(_t1));
-    atom * _t2 = _atom_text_build(_process, 20, 0, "hruwfworfbwregihwurbqlweuhrqweb--fsdfg2i");
+    atom * _t2 = _text_build(_process, 20, 0, "hruwfworfbwregihwurbqlweuhrqweb--fsdfg2i");
     printf("%s\n", _atom_get_extra_address(_t2));
     atom * _t3 = _text_clone(_process, _t2);
     printf("%s\n", _atom_get_extra_address(_t3));
 
-    atom * _texts = _atom_cache(_process, sizeof(size_t));
-    atom * _unicodes = _atom_cache(_process, sizeof(size_t));
-    atom * _bytes = _atom_cache(_process, sizeof(size_t));
+    atom * _texts = _cache_allocate(_process, sizeof(size_t));
+    atom * _unicodes = _cache_allocate(_process, sizeof(size_t));
+    atom * _bytes = _cache_allocate(_process, sizeof(size_t));
 
     char _test[] = "Test Escaped: \\x09\t\\t \\x55 好\\u597D";
 

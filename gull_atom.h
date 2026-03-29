@@ -27,8 +27,8 @@ num64_64 2     reference type     value
 num_big  1     reference type/off first    second           address size
 clock_32 1     reference type     second   ---              nano    ---
 clock_64 4     reference second   nano
-brief_32 7     reference protect/brief
-brief_64 2     reference type     protect/brief
+brief_32 1     reference type     protect/brief------------------------
+brief_64 2     reference protect/brief--
 
 原子最小占用 12 个字节（32 位系统一个指针 4 个字节，原子最少三个指针）
 如果系统的内存字节大小为 u (u > 0)，那么原子最多只有 (u / 12) 个
@@ -99,12 +99,12 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
     return (void *) (_atom->_atom_5 = (size_t) _value);
 }
 
-#define _atom_get_atom_info _atom_get_s1_1
-#define _atom_set_atom_info _atom_set_s1_1
-#define _atom_get_atom_reference _atom_get_s1_2
-#define _atom_set_atom_reference _atom_set_s1_2
-#define _atom_get_atom_type _atom_get_s2
-#define _atom_set_atom_type _atom_set_s2
+#define _atom_get_info _atom_get_s1_1
+#define _atom_set_info _atom_set_s1_1
+#define _atom_get_reference _atom_get_s1_2
+#define _atom_set_reference _atom_set_s1_2
+#define _atom_get_type _atom_get_s2
+#define _atom_set_type _atom_set_s2
 
 #define _atom_get_recycle_previous _atom_get_a2
 #define _atom_set_recycle_previous _atom_set_a2
@@ -286,9 +286,9 @@ static inline size_t
     }
 
 #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
-    _ATOM_BRIEF_ACCESS(3)
-#else
     _ATOM_BRIEF_ACCESS(2)
+#else
+    _ATOM_BRIEF_ACCESS(3)
 #endif
 
 #undef _ATOM_MEMBER_ACCESS

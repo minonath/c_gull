@@ -105,7 +105,7 @@ struct _gull_page {
     ((sizeof(page) + (sizeof(size_t) * 2) - 1) & (sizeof(size_t) * -2))
 
 static inline void _page_initial_extend(page * _page, page * _thread) {
-    _page->_page_info = _TYPE_INFO_FULL;
+    _page->_page_info = _TYPE_INFO_PAGE;
     _page->_page_reference = 0;
     _page->_page_type = _TYPE_PAGE;
     /* _page->_page_previous = 0; // 插入链表时会自动处理 */
@@ -117,7 +117,7 @@ static inline void _page_initial_extend(page * _page, page * _thread) {
 }
 
 static inline void _page_initial(page * _page, size_t _size, size_t _limit) {
-    _page->_page_info = _TYPE_INFO_FULL;
+    _page->_page_info = _TYPE_INFO_PAGE;
     _page->_page_reference = 0;
     _page->_page_type = _TYPE_PAGE;
     _page->_page_previous = 0;
@@ -434,7 +434,7 @@ static atom * _page_allocate_single(page * _thread) {
     _split:
     /* 这里需要部分初始化，确保是回收状态 */
     _thread->_page_single_size += 1;
-    _atom_set_atom_info(
+    _atom_set_info(
         _atom_recycle_push(&_thread->_page_single, _atom_pair(_result)),
         _TYPE_INFO_RECYCLE);
     return _result;
@@ -606,9 +606,9 @@ static inline atom * _page_allocate_bind(
         page * _thread, size_t _type, size_t _size) {
     atom * _atom = _page_allocate_double(_thread);
     size_t * _extra = _page_allocate_extra(_thread, _size);
-    _atom_set_atom_info(_atom, _TYPE_INFO_FULL);
-    _atom_set_atom_reference(_atom, 0);
-    _atom_set_atom_type(_atom, _type);
+    _atom_set_info(_atom, _TYPE_INFO_FULL);
+    _atom_set_reference(_atom, 0);
+    _atom_set_type(_atom, _type);
     // _atom_set_s3(_atom, 0);
     // _atom_set_s4(_atom, 0);
     _atom_set_extra_address(_atom, _extra + 1);
@@ -618,7 +618,7 @@ static inline atom * _page_allocate_bind(
 }
 
 static void _page_release_double(page * _thread, atom * _atom) {
-    _atom_set_atom_info(_atom, _TYPE_INFO_RECYCLE);
+    _atom_set_info(_atom, _TYPE_INFO_RECYCLE);
 
     page * _page = _page_head(_thread, _atom);
     _page->_page_used -= sizeof(atom);
@@ -652,7 +652,7 @@ static void _page_release_double(page * _thread, atom * _atom) {
 }
 
 static void _page_release_single(page * _thread, atom * _atom) {
-    _atom_set_atom_info(_atom, _TYPE_INFO_RECYCLE);
+    _atom_set_info(_atom, _TYPE_INFO_RECYCLE);
 
     atom * _pair = _atom_pair(_atom);
     page * _page = _page_head(_thread, _atom);
@@ -660,7 +660,7 @@ static void _page_release_single(page * _thread, atom * _atom) {
 
     if (_page == _thread) {
         /* 成对原子正在使用 */
-        if (_atom_get_atom_info(_pair) != _TYPE_INFO_RECYCLE) {
+        if (_atom_get_info(_pair) != _TYPE_INFO_RECYCLE) {
             _atom_recycle_push(&_page->_page_single, _atom);
             _page->_page_single_size += 1;
         } else {
@@ -672,7 +672,7 @@ static void _page_release_single(page * _thread, atom * _atom) {
         }
     } else {
         page * _thread = _page->_page_main;
-        if (_atom_get_atom_info(_pair) != _TYPE_INFO_RECYCLE) {
+        if (_atom_get_info(_pair) != _TYPE_INFO_RECYCLE) {
             _atom_recycle_push(&_thread->_page_single, _atom);
             _thread->_page_single_size += 1;
         } else {
@@ -814,7 +814,7 @@ static atom * _atom_is_legal(page * _thread, void * _memory) {
     #endif
 
     /* 范围合法但是要计算原子内容是否合法 */
-    size_t _info = _atom_get_atom_info(_memory);
+    size_t _info = _atom_get_info(_memory);
     if (_info == _TYPE_INFO_RECYCLE || _info == _TYPE_INFO_MISC) {
         return 0;
     }
@@ -823,7 +823,7 @@ static atom * _atom_is_legal(page * _thread, void * _memory) {
         if (_info == _TYPE_INFO_FULL) {
             return 0;
         }
-        _info = _atom_get_atom_info(_pair);
+        _info = _atom_get_info(_pair);
         if (_info == _TYPE_INFO_FULL || _info == _TYPE_INFO_MISC) {
             return 0;
         }

@@ -1,23 +1,24 @@
 #ifndef _GULL_TEXT_H
 #define _GULL_TEXT_H 1
 
+#include <stdio.h>
 #include "gull_page.h"
 #include "gull_cache.h"
 #include "gull_text_printable.h"
 
-static atom * _atom_text_build(
+static atom * _text_build(
         page * _thread, size_t _size, size_t _protect, char * _string) {
     atom * _text;
     if (_size <= 15) {
         #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
             _text = _page_allocate_single(_thread);
-            _atom_set_atom_info(_text, _TYPE_INFO_HALF);
-            _atom_set_atom_reference(_text, 0);
-            _atom_set_atom_type(_text, _TYPE_BRIEF);
+            _atom_set_info(_text, _TYPE_INFO_BRIEF_64);
+            _atom_set_reference(_text, 0);
         #else
-            _text = _page_allocate_single(_thread);
-            _atom_set_atom_info(_text, _TYPE_INFO_BRIEF_32);
-            _atom_set_atom_reference(_text, 0);
+            _text = _page_allocate_double(_thread);
+            _atom_set_info(_text, _TYPE_INFO_FULL);
+            _atom_set_reference(_text, 0);
+            _atom_set_type(_text, _TYPE_BRIEF_32);
         #endif
         _atom_set_brief_protect(_text, _protect);
         void * _address = _atom_get_brief_address(_text);
@@ -25,8 +26,8 @@ static atom * _atom_text_build(
         memset(_address + _size, 0, 15 - _size);
     } else {
         _text = _page_allocate_bind(_thread, _TYPE_TEXT, _size);
-        _atom_set_text_protect(_text, _protect);
         _atom_set_extra_used(_text, _size);
+        _atom_set_text_protect(_text, _protect);
         void * _address = _atom_get_extra_address(_text);
         memcpy(_address, _string, _size);
         memset(_address + _size, 0, _atom_get_extra_size(_text) - _size);
@@ -43,41 +44,36 @@ static inline size_t _text_brief_count(char * _address) {
     return 15;
 }
 
-static atom * _atom_2_text(page * _thread, atom * _atom) {
-    return 0;
-}
-
 static atom * _text_clone(page * _thread, atom * _text) {
-    size_t _info = _atom_get_atom_info(_text);
+    size_t _info = _atom_get_info(_text);
     char * _address;
     size_t _size, _protect;
 
     #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
-        if (_info == _TYPE_INFO_HALF) {
-            if (_atom_get_atom_type(_text) == _TYPE_BRIEF) {
-                _protect = _atom_get_brief_protect(_text);
-                _address = _atom_get_brief_address(_text);
-                _size = _text_brief_count(_address);
-                return _atom_text_build(_thread, _size, _protect, _address);
-            }
-        } else
-    #else
-        if (_info == _TYPE_INFO_BRIEF_32) {
+        if (_info == _TYPE_INFO_BRIEF_64) {
             _protect = _atom_get_brief_protect(_text);
             _address = _atom_get_brief_address(_text);
             _size = _text_brief_count(_address);
-            return _atom_text_build(_thread, _size, _protect, _address);
+            return _text_build(_thread, _size, _protect, _address);
         } else
     #endif
     if (_info == _TYPE_INFO_FULL) {
-        if (_atom_get_atom_type(_text) == _TYPE_TEXT) {
+        #if !((defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64))
+            if (_atom_get_type(_text) == _TYPE_BRIEF) {
+                _protect = _atom_get_brief_protect(_text);
+                _address = _atom_get_brief_address(_text);
+                _size = _text_brief_count(_address);
+                return _text_build(_thread, _size, _protect, _address);
+            } else
+        #endif
+        if (_atom_get_type(_text) == _TYPE_TEXT) {
             _protect = _atom_get_text_protect(_text);
             _address = _atom_get_extra_address(_text);
             _size = _atom_get_extra_used(_text);
-            return _atom_text_build(_thread, _size, _protect, _address);
+            return _text_build(_thread, _size, _protect, _address);
         }
     }
-    return _text_clone(_thread, _atom_2_text(_thread, _text));
+    return 0; // _text_clone(_thread, _atom_2_text(_thread, _text));
 }
 
 static size_t _text_printable_contain(

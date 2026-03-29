@@ -5,13 +5,13 @@
 #include "gull_page.h"
 
 /* cache 是一个 filo 的内存区域 */
-static inline atom * _atom_cache(page * _thread, size_t _size) {
+static inline atom * _cache_allocate(page * _thread, size_t _size) {
     atom * _cache = _page_allocate_bind(_thread, _TYPE_CACHE, _size);
     _atom_set_extra_used(_cache, 0);
     return _cache;
 }
 
-static inline atom * _atom_cache_with(
+static inline atom * _cache_with(
         page * _thread, size_t _reserve, size_t _size, char * _initial) {
     atom * _cache = _page_allocate_bind(_thread, _TYPE_CACHE, _size);
     _atom_set_extra_used(_cache, _size);
@@ -151,7 +151,7 @@ static inline void _cache_push_multi2(
     }                                                                        \
 }
 
-#define _CACHE_PUSH_UTF_8(_j) {                                               \
+#define _CACHE_PUSH_UTF_8(_j) {                                              \
     if (_result < 0x7f) {                                                    \
         _cache_push_uint8(_thread, _cache, _result);                         \
     } else if (_result < 0x7ff) {                                            \
@@ -177,18 +177,18 @@ static inline void _cache_push_multi2(
 
 /* 输入的 buffer 内容是转译后的，加入缓存变成原始 unicode 内容 */
 static inline void _cache_push_escaped_2_unicode(
-        page * _thread, atom * _cache, size_t _reserve, char * _buffer) {
+        page * _thread, atom * _cache,/* size_t _reserve,*/ char * _buffer) {
     size_t _size = strlen(_buffer);
-    if (_reserve) {
-        for (size_t _i = 0; _i < _size; _i ++) {
-            size_t _j = _size - _i - 1;
-            if (_i != _j) {
-                char _swap = _buffer[_i];
-                _buffer[_i] = _buffer[_j];
-                _buffer[_j] = _swap;
-            }
-        }
-    }
+    // if (_reserve) {
+    //     for (size_t _i = 0; _i < _size; _i ++) {
+    //         size_t _j = _size - _i - 1;
+    //         if (_i != _j) {
+    //             char _swap = _buffer[_i];
+    //             _buffer[_i] = _buffer[_j];
+    //             _buffer[_j] = _swap;
+    //         }
+    //     }
+    // }
     for (size_t _i = 0; _i < _size;) {
         unsigned _first = _buffer[_i++];
         if (_first == '\\' && _i < _size) { /* 反向转译 */
@@ -377,6 +377,11 @@ static inline void _cache_push_escaped_2_unicode(
             _cache_push_uint8(_thread, _cache, _first);
         }
     }
+}
+
+static inline void _cache_release_direct(page * _thread, atom * _cache) {
+    _page_release_extra(_thread, _cache);
+    _page_release_double(_thread, _cache);
 }
 
 #endif

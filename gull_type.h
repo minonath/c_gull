@@ -7,13 +7,15 @@
 #define _TYPE_INFO_MISC 3
 
 #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
-    #define _TYPE_INFO_CLOCK 4
+    #define _TYPE_INFO_BRIEF_64 4
+    #define _TYPE_INFO_CLOCK 5
 #else
     #define _TYPE_INFO_INT64 4
     #define _TYPE_INFO_UINT64 5
     #define _TYPE_INFO_DOUBLE 6
-    #define _TYPE_INFO_BRIEF_32 7
 #endif
+
+#define _TYPE_INFO_PAGE 7
 
 #define _TYPE_RECYCLE 0
 #define _TYPE_MISC 2
@@ -93,7 +95,7 @@ static inline size_t _atom_allow_state_record(atom * _atom) {
         _atom->_atom_2 == _TYPE_ACCESS;
 }
 
-#define _TYPE_BRIEF 64
+#define _TYPE_BRIEF_32 64
 #define _TYPE_TEXT 65
 #define _TYPE_BYTES 66
 #define _TYPE_CACHE 67

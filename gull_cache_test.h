@@ -6,7 +6,7 @@
 
 void gull_cache_test() {
     page * _process = _page_allocate_process(_PAGE_SIZE_4K, 12);
-    atom * _cache = _atom_cache_with(_process, 1, 10, "hello meow");
+    atom * _cache = _cache_with(_process, 1, 10, "hello meow");
 
     _cache_push(_process, _cache, unsigned char, '~');
     _cache_push(_process, _cache, unsigned, 123456);
@@ -31,7 +31,7 @@ void gull_cache_test() {
     printf("\n");
 
     char _text[] = "hello world \\x4F dlrow olleh";
-    _cache_push_escaped_2_unicode(_process, _cache, 1, _text);
+    _cache_push_escaped_2_unicode(_process, _cache, _text);
     for (int _i = 0; _i < strlen(_text); _i ++) {
         printf("%c", _cache_pop_uint8(_cache));
     }
