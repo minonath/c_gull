@@ -37,25 +37,30 @@ static void _cache_expand(page * _thread, atom * _cache, size_t _size) {
 
     size_t _old_len = _atom_get_extra_size(_cache);
     if (_size > _old_len) {
-        void * _old_ptr = _atom_get_extra_address(_cache);
-        size_t * _old = _old_ptr - sizeof(size_t);
-
         size_t * _new = _page_allocate_extra(_thread, _size);
         void * _new_ptr = _new + 1;
         size_t _new_len = *_new - sizeof(size_t);
 
+        /* 需要在新申请之后，因为新申请的内存会改变当前内存位置 */
+        void * _old_ptr = _atom_get_extra_address(_cache);
+        size_t * _old = _old_ptr - sizeof(size_t);
+
         memcpy(_new_ptr, _old_ptr, _old_len);
-
-        *_old = _old_len + sizeof(size_t); /* clean */
-
-        page * _page = _page_head(_thread, _old);
-        _page->_page_used -= *_old;
 
         _atom_set_extra_address(_cache, _new_ptr);
         _atom_set_extra_size(_cache, _new_len);
-
         *_new = ((size_t) _cache) | 1;
-        _page_extra_test(_thread, _page);
+
+        _old_len += sizeof(size_t); /* clean */
+
+        if (_old_len > _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+            _page_free(_old, _old_len);
+        } else {
+            *_old = _old_len;
+            page * _page = _page_head(_thread, _old);
+            _page->_page_used -= _old_len;
+            _page_extra_test(_thread, _page);
+        }
     }
 }
 

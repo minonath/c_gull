@@ -59,7 +59,6 @@ static void _code_to_structure_inner(page * _thread, atom * _keywords,
     _CODE_TO_STRING_DEFAULT(_KEYWORD_EXECUTE_L);
 
     char * _inner = _code_to_structure_type(_atom_get_type(_code));
-    printf("%s\n", _inner);
 
     _cache_push_multi(_thread, _string, 0, strlen(_inner), _inner);
     _cache_push_multi(_thread, _string, 0, 6, " this:");
@@ -67,7 +66,6 @@ static void _code_to_structure_inner(page * _thread, atom * _keywords,
     _cache_push_multi(_thread, _string, 0, 7, " first:");
     _code_push_hex(_thread, _string, _atom_get_code_first(_code));
     _cache_push_multi(_thread, _string, 0, 10, " previous:");
-    printf("%p\n", _atom_get_code_previous(_code));
     _code_push_hex(_thread, _string, _atom_get_code_previous(_code));
 
     if (_atom_get_code_current(_code)) {

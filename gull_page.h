@@ -296,9 +296,7 @@ static inline void _page_recycle_extend(page * _extend) {
 static page * _page_allocate_extend(page * _thread) {
     if (_thread->_page_recycle_size) {
         _thread->_page_recycle_size -= 1;
-        void * _result = _page_pop(&_thread->_page_recycle);
-        _page_initial_extend(_result, _thread);
-        return _result;
+        return _page_pop(&_thread->_page_recycle);
     }
     size_t _size = _thread->_page_size;
     void * _reserve, * _align;
@@ -482,7 +480,7 @@ static void _page_extra_sort(page * _page, size_t _size) {
 因为这里不进行检测，所以需要保证两个页面合并不会溢出
 返回被合并页面，用户可以决定是删除它，还是当作新页面使用
 */
-static size_t _page_extra_merge(page * _thread, page * _page) {
+static size_t _page_extra_merge_two(page * _thread, page * _page) {
     page * _merge = _thread->_page_extra_merge;
     size_t _size = _thread->_page_size;
     size_t * _to = ((void *) _merge) + _PAGE_EXTEND_HEAD_SIZE;
@@ -518,7 +516,7 @@ static size_t _page_extra_merge(page * _thread, page * _page) {
         }
     }
 
-    _merge->_page_used += _page->_page_used;
+    _merge->_page_used = _merge->_page_used + _page->_page_used;
     _merge->_page_remain = _size - _PAGE_EXTEND_HEAD_SIZE - _merge->_page_used;
 
     _page->_page_used = 0;
@@ -546,10 +544,9 @@ static size_t * _page_allocate_extra(page * _thread, size_t _length) {
         #endif
         goto _return;
     }
-    printf("sorted %zu\n", _thread->_page_extra_size);
+
     if (_thread->_page_extra_size) {
         _current = _thread->_page_extra;
-        printf(" %p\n", _current);
 
         /* 如果页面容量足够，直接分配 */
         if (_current->_page_remain >= _length) goto _remain;
@@ -578,15 +575,6 @@ static size_t * _page_allocate_extra(page * _thread, size_t _length) {
     _current = _page_allocate_extend(_thread);
     _page_push(&_thread->_page_extra, _current);
     _thread->_page_extra_size += 1;
-
-    /* 这里比较微妙，如果合并区存在页面，意味着申请的尺寸必然大于合并阈值 */
-    if (_thread->_page_extra_merge == 0) { /* 否则申请的页面必然可以合并 */
-        _thread->_page_extra_merge = _current;
-        _extra = ((void *) _current) + _PAGE_EXTEND_HEAD_SIZE;
-        _current->_page_remain -= _length;
-        _current->_page_used += _length;
-        goto _return;
-    }
 
     /* 在当前页面进行分配 */
     _remain:
@@ -717,7 +705,7 @@ static void _page_extra_test(page * _thread, page * _page) {
         size_t _limit = (_thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) >> 1;
         if (_page->_page_used < _limit) {
             if (_thread->_page_extra_merge) {
-                if (_page_extra_merge(_thread, _page) >= _limit) {
+                if (_page_extra_merge_two(_thread, _page) >= _limit) {
                     _thread->_page_extra_merge = 0;
                 }
                 goto _recycle;
@@ -735,15 +723,20 @@ static void _page_extra_test(page * _thread, page * _page) {
     _recycle:
     _page_remove(&_thread->_page_extra, _page);
     _thread->_page_extra_size -= 1;
+    _page->_page_remain = _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE;
     _page_recycle_extend(_page);
 }
 
 static void _page_release_extra(page * _thread, atom * _atom) {
     size_t * _target = _atom_get_extra_address(_atom) - sizeof(size_t);
     *_target = _atom_get_extra_size(_atom) + sizeof(size_t);
-    page * _page = _page_head(_thread, _target);
-    _page->_page_used -= *_target;
-    _page_extra_test(_thread, _page);
+    if (*_target > _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+        _page_free(_target, *_target);
+    } else {
+        page * _page = _page_head(_thread, _target);
+        _page->_page_used -= *_target;
+        _page_extra_test(_thread, _page);
+    }
 }
 
 static size_t _multiples3(size_t n) {

@@ -110,6 +110,17 @@ void gull_page_test() {
 
     _page_print(_process);
 
+    if (_process->_page_extra)
+        printf("%zu\n", _process->_page_extra->_page_used);
+    size_t * _m = _page_allocate_bind(_process, _TYPE_TEXT, 456);
+    printf("1 %zu %zu\n", _process->_page_extra->_page_used, _process->_page_extra->_page_remain);
+    size_t * _n = _page_allocate_bind(_process, _TYPE_TEXT, 456);
+    printf("2 %zu %zu\n", _process->_page_extra->_page_used, _process->_page_extra->_page_remain);
+    _page_release_extra(_process, _m);
+    printf("3 %zu %zu\n", _process->_page_extra->_page_used, _process->_page_extra->_page_remain);
+    _page_release_extra(_process, _n);
+    if (_process->_page_extra)
+        printf("%zu\n", _process->_page_extra->_page_used);
 }
 
 #endif
