@@ -32,10 +32,16 @@ void gull_cache_test() {
 
     char _text[] = "hello world \\x4F dlrow olleh";
     _cache_push_escaped_2_unicode(_process, _cache, _text);
-    for (int _i = 0; _i < strlen(_text); _i ++) {
+    for (int _i = _atom_get_extra_used(_cache); _i > 0; _i --) {
         printf("%c", _cache_pop_uint8(_cache));
     }
-    printf("\n");
+    printf("%s\n", _atom_get_extra_address(_cache));
+
+    for (int _i = 0; _i < 1000; _i ++) {
+        _cache_push_uint8(_process, _cache, (_i % 10) + '0');
+    }
+    _cache_push_uint8(_process, _cache, 0);
+    printf("%s\n", _atom_get_extra_address(_cache));
 }
 
 #endif

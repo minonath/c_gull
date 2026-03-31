@@ -197,7 +197,8 @@ static void _code_analyze(
     for (; ; ) {
         _code_read_first();
         _start:
-        // printf("start %zu %zu\n", _atom_get_extra_used(_assist), *_level);
+        // printf("start assist_used:%zu level:%zu max:%zu piece:%zu\n",
+        //     _atom_get_extra_used(_assist), *_level, *_max, *_piece);
         if (_atom_get_extra_used(_assist)) {
             for (; ; ) {
                 if (_type == _KEYWORD_EOF) {
@@ -224,7 +225,8 @@ static void _code_analyze(
                 }
             }
         } else if (*_level) {
-            for (size_t _count = 0, _keep = _atom_get_extra_used(_words);;) {
+            size_t _count = (*_piece == 1 || *_piece == 2) ? -1 : 0;
+            for (size_t _keep = _atom_get_extra_used(_words);;) {
                 if (_type == _KEYWORD_EOF) {
                     return;
                 } else if (_type == _KEYWORD_SEPARATOR) {
@@ -254,6 +256,7 @@ static void _code_analyze(
                                 *_max + 1 : *_piece & 1 ? 0 : 1,
                                 _atom_get_extra_address(_words)));
                         }
+                        *_level = 0;
                         _cache_clear(_words);
                         _code_auto(_cursor);
                         _code_read_one();

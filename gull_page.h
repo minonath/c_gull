@@ -296,7 +296,9 @@ static inline void _page_recycle_extend(page * _extend) {
 static page * _page_allocate_extend(page * _thread) {
     if (_thread->_page_recycle_size) {
         _thread->_page_recycle_size -= 1;
-        return _page_pop(&_thread->_page_recycle);
+        void * _result = _page_pop(&_thread->_page_recycle);
+        _page_initial_extend(_result, _thread);
+        return _result;
     }
     size_t _size = _thread->_page_size;
     void * _reserve, * _align;
@@ -544,9 +546,10 @@ static size_t * _page_allocate_extra(page * _thread, size_t _length) {
         #endif
         goto _return;
     }
-
+    printf("sorted %zu\n", _thread->_page_extra_size);
     if (_thread->_page_extra_size) {
         _current = _thread->_page_extra;
+        printf(" %p\n", _current);
 
         /* 如果页面容量足够，直接分配 */
         if (_current->_page_remain >= _length) goto _remain;
