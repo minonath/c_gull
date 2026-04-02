@@ -47,7 +47,8 @@ void gull_lock_test() {
     for (int _i = 0; _i < SIZE; _i ++)
         pthread_create(_threads + _i, 0, _lock_test_thread, &_test);
 
-    struct timespec _request_timespec = {0, 100000000}, _remain_timespec = {0};
+    struct timespec _request_timespec = {0, 100000000};
+    struct timespec _remain_timespec = {0};
     nanosleep(&_request_timespec, &_remain_timespec);
 
     if (_lock_try(&_test, (size_t) pthread_self()) == 0) {

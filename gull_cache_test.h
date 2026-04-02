@@ -47,15 +47,14 @@ void gull_cache_test() {
     atom * _meow = _cache_allocate(_process, 0);
 
     if (_process->_page_extra) {
-        // printf("extra\n\t<%zu %p used:%zu remain:%zu>\n", 0, _process->_page_extra, _process->_page_extra->_page_used, _process->_page_extra->_page_remain);
-
-        for (int _i = 1; _i < _PAGE_SIZE_4K - _PAGE_EXTEND_HEAD_SIZE - sizeof(size_t); _i ++) {
+        for (int _i = 1; _i < _PAGE_SIZE_4K - _PAGE_EXTEND_HEAD_SIZE -
+                sizeof(size_t); _i ++) {
             _cache_expand(_process, _meow, _i);
             if (_i % 100 == 0 || _i > 4000) {
-                printf("\t<%zu %zu %p used:%zu remain:%zu>\n", _i, _process->_page_extra_size,  _process->_page_extra, _process->_page_extra->_page_used, _process->_page_extra->_page_remain);
-                // if (_process->_page_extra->_page_next) {
-                //     printf("\t\t<%p used:%zu remain:%zu>\n", _process->_page_extra->_page_next, _process->_page_extra->_page_next->_page_used, _process->_page_extra->_page_next->_page_remain);
-                // }
+                printf("\t<%d %zu %p used:%zu remain:%zu>\n", _i,
+                    _process->_page_extra_size,  _process->_page_extra,
+                    _process->_page_extra->_page_used,
+                    _process->_page_extra->_page_remain);
             }
         }
     }
@@ -69,6 +68,10 @@ void gull_cache_test() {
     _page_release_double(_process, _m2);
     _page_extra_sort(_process->_page_extra, _process->_page_size);
     _page_extra_sort(_process->_page_extra, _process->_page_size);
+    _page_release_extra(_process, _m1);
+    _page_release_double(_process, _m1);
+    _page_release_extra(_process, _m3);
+    _page_release_double(_process, _m3);
 }
 
 #endif

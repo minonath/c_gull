@@ -517,7 +517,8 @@ static size_t _page_extra_merge_two(page * _thread, page * _page) {
     }
 
     _merge->_page_used = _merge->_page_used + _page->_page_used;
-    _merge->_page_remain = _size - _PAGE_EXTEND_HEAD_SIZE - _merge->_page_used;
+    _merge->_page_remain =
+        _size - _PAGE_EXTEND_HEAD_SIZE - _merge->_page_used;
 
     _page->_page_used = 0;
     _page->_page_remain = _size - _PAGE_EXTEND_HEAD_SIZE;
@@ -575,10 +576,14 @@ static size_t * _page_allocate_extra(page * _thread, size_t _length) {
     _current = _page_allocate_extend(_thread);
     _page_push(&_thread->_page_extra, _current);
     _thread->_page_extra_size += 1;
+    if (_thread->_page_extra_merge == 0) {
+        _thread->_page_extra_merge = _current;
+    }
 
     /* 在当前页面进行分配 */
     _remain:
-    _extra = ((void *) _current) + _thread->_page_size - _current->_page_remain;
+    _extra =
+        ((void *) _current) + _thread->_page_size - _current->_page_remain;
     _current->_page_remain -= _length;
     _current->_page_used += _length;
 

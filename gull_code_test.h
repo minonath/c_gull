@@ -2,7 +2,7 @@
 #define _GULL_CODE_TEST_H 1
 
 #include "gull_code.h"
-#include "gull_code_structure.h"
+#include "gull_code_string.h"
 
 #define _CODE_TEST_LOOP(test) {                                              \
     _cache_push_multi(_process, _bytes, 1, (size_t) strlen(test), test);     \
@@ -12,7 +12,7 @@
         _assist, _words, &_level, &_max, &_piece);                           \
     _cache_clear(_string);                                                   \
     _code_to_string(                                                         \
-        _process, _process->_uniform_keywords, _string, _keep);              \
+        _process, _process->_uniform_keywords, _string, _keep, 0);           \
     _cache_push_uint8(_process, _string, 0);                                 \
     printf("<< %zu >> %s\n\n",                                               \
         _atom_get_extra_used(_string), _atom_get_extra_address(_string));    \
@@ -103,7 +103,6 @@ void gull_code_test() {
     _CODE_TEST_LOOP(_test5);
 
     printf("level:%zu max:%zu piece:%zu\n", _level, _max, _piece);
-    _page_print(_process);
 }
 
 #endif

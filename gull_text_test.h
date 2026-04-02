@@ -7,7 +7,8 @@ void gull_text_test() {
     page * _process = _page_allocate_process(_PAGE_SIZE_4K, 12);
     atom * _t1 = _text_build(_process, 15, 0, "hello meow 1234567890");
     printf("%s\n", _atom_get_brief_address(_t1));
-    atom * _t2 = _text_build(_process, 20, 0, "hruwfworfbwregihwurbqlweuhrqweb--fsdfg2i");
+    atom * _t2 = _text_build(
+        _process, 20, 0, "hruwfworfbwregihwurbqlweuhrqweb--fsdfg2i");
     printf("%s\n", _atom_get_extra_address(_t2));
     atom * _t3 = _text_clone(_process, _t2);
     printf("%s\n", _atom_get_extra_address(_t3));
