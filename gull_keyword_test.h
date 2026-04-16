@@ -15,9 +15,9 @@ void gull_keyword_test() {
 
     char * _test[] = {(char *) _KEYWORD_ACCESS, "hello test", "."};
 
-    _process->_uniform_bulitins = _page_allocate_thread(_process);
+    _process->_uniform_builtins = _page_allocate_thread(_process);
     _process->_uniform_keywords = _keyword_initial(
-        _process->_uniform_bulitins, 0, 0, 0, 0, _test, 3);
+        _process->_uniform_builtins, 0, 0, 0, 0, _test, 3);
 
     atom * _keyword = _process->_uniform_keywords;
     for (;;) {

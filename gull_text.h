@@ -6,6 +6,8 @@
 #include "gull_cache.h"
 #include "gull_text_printable.h"
 
+static atom * _text_output(page * _thread, atom * _atom);
+
 static atom * _text_build(
         page * _thread, size_t _size, size_t _protect, char * _string) {
     atom * _text;
@@ -73,7 +75,7 @@ static atom * _text_clone(page * _thread, atom * _text) {
             return _text_build(_thread, _size, _protect, _address);
         }
     }
-    return 0; // _text_clone(_thread, _atom_2_text(_thread, _text));
+    return _text_clone(_thread, _text_output(_thread, _text));
 }
 
 static size_t _text_printable_contain(

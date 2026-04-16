@@ -87,7 +87,7 @@ struct _gull_page {
     atom * _threads_by_name; /* 线程名称储存 */
 
     size_t _uniform_base[2]; /* 由两个指针组成的，充当原子的地址 */
-    page * _uniform_bulitins; /* 内嵌容器，静态，所以可以全局访问*/
+    page * _uniform_builtins; /* 内嵌容器，静态，所以可以全局访问*/
     atom * _uniform_keywords;
 };
 

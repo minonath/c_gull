@@ -3,6 +3,10 @@
 
 #include "gull_text.h"
 
+static atom * _text_output(page * _thread, atom * _atom) {
+    return 0;
+}
+
 void gull_text_test() {
     page * _process = _page_allocate_process(_PAGE_SIZE_4K, 12);
     atom * _t1 = _text_build(_process, 15, 0, "hello meow 1234567890");

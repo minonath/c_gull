@@ -26,9 +26,9 @@ num64_32 4/5/6 reference value    ---
 num64_64 2     reference type     value
 num_big  1     reference type/off first    second           address size
 clock_32 1     reference type     second   ---              nano    ---
-clock_64 4     reference second   nano
+clock_64 5     reference second   nano
 brief_32 1     reference type     protect/brief------------------------
-brief_64 2     reference protect/brief--
+brief_64 4     reference protect/brief--
 
 原子最小占用 12 个字节（32 位系统一个指针 4 个字节，原子最少三个指针）
 如果系统的内存字节大小为 u (u > 0)，那么原子最多只有 (u / 12) 个
