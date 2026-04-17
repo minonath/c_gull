@@ -10,10 +10,10 @@
 #include <signal.h>
 #include <string.h>
 
+#include "gull_type.h"
 #include "gull_atom.h"
 #include "gull_lock.h"
 #include "gull_signature.h"
-#include "gull_type.h"
 
 /*
 Gull 的内存使用页面进行管理
@@ -744,19 +744,19 @@ static void _page_release_extra(page * _thread, atom * _atom) {
     }
 }
 
-static size_t _multiples3(size_t n) {
-    int odd = 0;
-    int even = 0;
-    if (n < 2) return n;
-    while (n) {
-        if (n & 1) odd += 1;
-        if (n & 2) even += 1;
-        n = n >> 2;
+static size_t _multiples3(size_t _n) {
+    int _odd = 0;
+    int _even = 0;
+    if (_n < 2) return _n;
+    while (_n) {
+        if (_n & 1) _odd += 1;
+        if (_n & 2) _even += 1;
+        _n = _n >> 2;
     }
-    if (odd > even) {
-        return _multiples3(odd - even);
+    if (_odd > _even) {
+        return _multiples3(_odd - _even);
     } else {
-        return _multiples3(even - odd);
+        return _multiples3(_even - _odd);
     }
 }
 

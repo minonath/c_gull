@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "gull_page.h"
 
 static void _page_print(page * _page) {

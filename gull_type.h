@@ -70,31 +70,6 @@
 #define _TYPE_GOTO 50
 #define _TYPE_BASE 51
 
-/* 判断代码是否可以添加尾缀，形成连续链条 */
-static inline size_t _atom_allow_code_access(atom * _atom) {
-    return _atom->_atom_2 >= _TYPE_COMMENT &&
-        _atom->_atom_2 <= _TYPE_ACCESS;
-}
-
-/* 判断代码是否允许 QUICK 出现 */
-static inline size_t _atom_allow_code_quick(atom * _atom) {
-    return _atom->_atom_2 >= _TYPE_COMMENT &&
-        _atom->_atom_2 <= _TYPE_PHRASE;
-}
-
-/* 判断代码是否允许返回前一个链条 */
-static inline size_t _atom_allow_code_up(atom * _atom) {
-    return _atom->_atom_2 >= _TYPE_EXECUTE &&
-        _atom->_atom_2 <= _TYPE_STATIC;
-}
-
-/* 判断代码是否可用于状态记录 */
-static inline size_t _atom_allow_state_record(atom * _atom) {
-    return _atom->_atom_2 == _TYPE_LINE ||
-        _atom->_atom_2 == _TYPE_TAIL ||
-        _atom->_atom_2 == _TYPE_ACCESS;
-}
-
 #define _TYPE_BRIEF_32 64
 #define _TYPE_TEXT 65
 #define _TYPE_BYTES 66

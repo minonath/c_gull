@@ -34,9 +34,9 @@ void gull_code_test() {
     _atom_set_info(_base, _TYPE_INFO_HALF);
     _atom_set_reference(_base, 0);
     _atom_set_type(_base, _TYPE_BASE);
-    _process->_uniform_bulitins = _page_allocate_thread(_process);
+    _process->_uniform_builtins = _page_allocate_thread(_process);
     _process->_uniform_keywords = _keyword_initial(
-        _process->_uniform_bulitins, 0, 0, 0, 0, _test, 6);
+        _process->_uniform_builtins, 0, 0, 0, 0, _test, 6);
 
     atom * _cursor = _code_line(_process);
     atom * _keep = _cursor;

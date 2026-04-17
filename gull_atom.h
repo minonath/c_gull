@@ -469,4 +469,61 @@ static atom * _atom_base_append(atom ** _root, atom * _atom) {
     return _atom;
 }
 
+static inline size_t _atom_type_is(atom * _atom, size_t _type) {
+    return _atom->_atom_2 == _type;
+}
+
+static inline size_t _atom_type_in_range(
+        atom * _atom, size_t _start, size_t _end) {
+    return _atom->_atom_2 >= _start && _atom->_atom_2 <= _end;
+}
+
+static inline size_t _atom_type_in2(atom * _atom, size_t _one, size_t _two) {
+    return _atom->_atom_2 == _one || _atom->_atom_2 == _two;
+}
+
+static inline size_t _atom_type_in3(
+        atom * _atom, size_t _one, size_t _two, size_t _three) {
+    return _atom->_atom_2 == _one ||
+        _atom->_atom_2 == _two ||
+        _atom->_atom_2 == _three;
+}
+
+/* 判断代码是否可以添加尾缀，形成连续链条 */
+#define _atom_allow_code_access(one)                                         \
+    _atom_type_in_range(one, _TYPE_COMMENT, _TYPE_ACCESS)
+
+/* 判断代码是否允许 QUICK 出现 */
+#define _atom_allow_code_quick(one)                                          \
+    _atom_type_in_range(one, _TYPE_COMMENT, _TYPE_PHRASE)
+
+/* 判断代码是否允许返回前一个链条 */
+#define _atom_allow_code_up(one)                                             \
+    _atom_type_in_range(one, _TYPE_EXECUTE, _TYPE_STATIC)
+
+/* 判断代码是否可用于状态记录 */
+#define _atom_allow_state_record(one)                                        \
+    _atom_type_in3(one, _TYPE_LINE, _TYPE_TAIL, _TYPE_ACCESS)
+
+static inline size_t _atom_increase_reference(atom * _atom) {
+    // return _atom_set_reference(_atom, _atom_get_reference(_atom) + 1);
+    return _atom->_atom_1_2 += 1;
+}
+
+static inline size_t _atom_decrease_reference(atom * _atom) {
+    return _atom->_atom_1_2 -= 1;
+}
+
+static inline atom ** _atom_get_tree_root_refer(atom * _atom) {
+    return (atom **) &_atom->_atom_5;
+}
+
+static inline atom ** _atom_get_tree_pair_refer(atom * _atom) {
+    return (atom **) &_atom->_atom_6;
+}
+
+static inline atom ** _atom_get_node_child_refer(atom * _atom) {
+    return (atom **) &_atom->_atom_2;
+}
+
 #endif
