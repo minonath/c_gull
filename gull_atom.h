@@ -12,14 +12,14 @@ Gull 使用六个或者三个指针长度的结构储存数据
 TYPE    | FIRST ADDRESS | SECOND | THIRD  | FOURTH         | FIFTH | SIXTH
 recycle  0     reference previous next
 code     1     reference type     first    previous         current next
-tree     1     reference type     base     scanned/cycle    root    pair
+tree     1     reference type     base     scan/loop/count  root    pair
 base     3     reference value    next
 node     3     parent    child    key      color/value      left    right
 pair     1     reference type     previous next             key     value
 text     1     reference type     length   protect          address size
 cache    1     reference type     length   ---              address size
 keyword  1     reference type     length   next             address size
-list     1     reference type     length   scanned/cycle    address size
+list     1     reference type     length   scan/loop/count  address size
 state    3     code      cursor   scope    end/branch/index outer   inner
 num32    2     reference type     value
 num64_32 4/5/6 reference value    ---
@@ -49,7 +49,8 @@ typedef struct {
         struct {
             size_t _atom_4_1: 1;
             size_t _atom_4_2: 1;
-            size_t _atom_4_3: sizeof(size_t) * 8 - 2;
+            size_t _atom_4_3: 1;
+            size_t _atom_4_4: sizeof(size_t) * 8 - 3;
         };
     };
     size_t _atom_5;
@@ -88,7 +89,8 @@ _ATOM_MEMBER_ACCESS_CAST(3)
 _ATOM_MEMBER_ACCESS_CAST(4)
 _ATOM_MEMBER_ACCESS(4_1)
 _ATOM_MEMBER_ACCESS(4_2)
-_ATOM_MEMBER_ACCESS_OFFSET(4_3, 2)
+_ATOM_MEMBER_ACCESS(4_3)
+_ATOM_MEMBER_ACCESS_OFFSET(4_4, 3)
 _ATOM_MEMBER_ACCESS_CAST(5)
 _ATOM_MEMBER_ACCESS_CAST(6)
 
@@ -120,10 +122,14 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_get_code_next _atom_get_a6
 #define _atom_set_code_next _atom_set_a6
 
-#define _atom_get_container_scanned _atom_get_s4_1
-#define _atom_set_container_scanned _atom_set_s4_1
-#define _atom_get_container_cycle _atom_get_s4_3
-#define _atom_set_container_cycle _atom_set_s4_3
+#define _atom_get_container_scan _atom_get_s4_1
+#define _atom_set_container_scan _atom_set_s4_1
+#define _atom_get_container_loop _atom_get_s4_2
+#define _atom_set_container_loop _atom_set_s4_2
+#define _atom_get_container_cache _atom_get_s4_3
+#define _atom_set_container_cache _atom_set_s4_3
+#define _atom_get_container_count _atom_get_s4_4
+#define _atom_set_container_count _atom_set_s4_4
 /* tree 和 list 使用 container 数据 */
 
 #define _atom_get_tree_base _atom_get_a3
@@ -146,10 +152,10 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_set_node_key _atom_set_s3
 #define _atom_get_node_color _atom_get_s4_1
 #define _atom_set_node_color _atom_set_s4_1
-#define _atom_set_node_black(atom) _atom_set_s4_1(atom, 0)
-#define _atom_set_node_red(atom) _atom_set_s4_1(atom, 1)
-#define _atom_get_node_value _atom_get_a4_3
-#define _atom_set_node_value _atom_set_a4_3
+#define _atom_set_node_black(one) _atom_set_s4_1(one, 0)
+#define _atom_set_node_red(one) _atom_set_s4_1(one, 1)
+#define _atom_get_node_value _atom_get_a4_4
+#define _atom_set_node_value _atom_set_a4_4
 #define _atom_get_node_left _atom_get_a5
 #define _atom_set_node_left _atom_set_a5
 #define _atom_get_node_right _atom_get_a6
@@ -187,8 +193,8 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_set_state_end _atom_set_s4_1
 #define _atom_get_state_branch _atom_get_s4_2
 #define _atom_set_state_branch _atom_set_s4_2
-#define _atom_get_state_index _atom_get_s4_3
-#define _atom_set_state_index _atom_set_s4_3
+#define _atom_get_state_index _atom_get_s4_4
+#define _atom_set_state_index _atom_set_s4_4
 #define _atom_get_state_outer _atom_get_a5
 #define _atom_set_state_outer _atom_set_a5
 #define _atom_get_state_inner _atom_get_a6

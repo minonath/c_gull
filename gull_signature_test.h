@@ -9,7 +9,7 @@ void gull_signature_test() {
     nanosleep(&_request, &_remain);
 
     signature _signature = {0};
-    char _string[_SIGNATURE_SIZE];
+    char _string[_SIGNATURE_SIZE + 1] = {0};
 
     _signature_string(&_signature, _string);
     printf("second %ld\n", _signature._signature_second);

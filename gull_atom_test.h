@@ -91,10 +91,10 @@ void gull_atom_test() {
     _ATOM_MEMBER_TEST(%llu, clock_nano, 32323232);
 
     char * _brief = _atom_get_brief_address(&_test);
-    printf("brief old\t%s\n", _brief);
+    printf("brief_old\t%s\n", _brief);
     _ATOM_MEMBER_TEST(%u, brief_protect, -1); // 255
     strcpy(_brief, "hello meow");
-    printf("brief new\t%s\n", _brief);
+    printf("brief_new\t%s\n", _brief);
 
     atom _m0 = {0};
     atom _m1 = {0};

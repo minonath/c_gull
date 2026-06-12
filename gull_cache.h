@@ -37,6 +37,12 @@ static void _cache_expand(page * _thread, atom * _cache, size_t _size) {
 
     size_t _old_len = _atom_get_extra_size(_cache);
     if (_size > _old_len) {
+        size_t _bound = ((_old_len << 2) + _old_len) >> 1;
+        // size_t _bound = _old_len << 2;
+        if (_size < _bound) {
+            _size = _bound;
+        }
+
         size_t * _new = _page_allocate_extra(_thread, _size);
         void * _new_ptr = _new + 1;
         size_t _new_len = *_new - sizeof(size_t);
@@ -384,9 +390,32 @@ static inline void _cache_push_escaped_2_unicode(
     }
 }
 
+static inline atom * _cache_copy(page * _thread, atom * _cache) {
+    size_t _size = _atom_get_extra_used(_cache);
+    atom * _result = _cache_allocate(_thread, _size);
+    _atom_set_extra_used(_result, _size);
+    memcpy(_atom_get_extra_address(_result), _atom_get_extra_address(_cache), _size);
+    return _result;
+}
+
 static inline void _cache_release_direct(page * _thread, atom * _cache) {
+    // _atom_set_reference(_cache, 0);
     _page_release_extra(_thread, _cache);
     _page_release_double(_thread, _cache);
+}
+
+static inline void _cache_concat(page * _thread, atom * _cache, atom * _other) {
+    size_t _old = _atom_get_extra_used(_cache);
+    size_t _size = _atom_get_extra_used(_other);
+    size_t _new = _old + _size;
+    _cache_expand(_thread, _cache, _new);
+    _atom_set_extra_used(_cache, _new);
+    char * _address = _atom_get_extra_address(_cache);
+    char * _buffer = _atom_get_extra_address(_other);
+
+    for (size_t _i = 0; _i < _size;) {
+        _address[_old ++] = _buffer[_i ++];
+    }
 }
 
 #endif

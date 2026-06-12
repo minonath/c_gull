@@ -24,8 +24,9 @@ Gull 的内存使用页面进行管理
 */
 typedef struct _gull_page page;
 
-typedef size_t (* _container_traversal) (void *, atom *, atom *);
-typedef size_t (* _container_destroy) (page *, atom *);
+typedef size_t (* _container_traversal) (page *, atom *, atom *, atom *);
+typedef void (* _container_count) (page *, atom *, atom *);
+typedef void (* _container_destroy) (page *, atom *, atom *);
 
 struct _gull_page {
     /* 为了与原子兼容，第一、二个指针预留给 info reference 和 type */
@@ -80,6 +81,7 @@ struct _gull_page {
     signature _signature_generator; /* 进程签名生成器 */
 
     _container_traversal _container_traversals[_TYPE_CONTAINER_SIZE];
+    _container_count _container_counts[_TYPE_CONTAINER_SIZE];
     _container_destroy _container_destroys[_TYPE_CONTAINER_SIZE];
 
     page * _threads_shared;
@@ -703,6 +705,9 @@ static void _page_release_single(page * _thread, atom * _atom) {
 如果当前页面正在使用，且使用量不足一半，进行合并尝试
 */
 static void _page_extra_test(page * _thread, page * _page) {
+    if (_page->_page_size) { // 被独立的额外页面不进行回收
+        return;
+    }
     if (_page->_page_used) {
         if (_thread->_page_extra_merge == _page) {
             return;
@@ -830,6 +835,61 @@ static atom * _atom_is_legal(page * _thread, void * _memory) {
         }
     }
     return _memory;
+}
+
+// #include <stdio.h>
+
+static void * _atom_get_extra_address_block(page * _thread, atom * _atom) {
+    size_t _size = _atom_get_extra_size(_atom);
+    void * _address = _atom_get_extra_address(_atom);
+    if (_size + sizeof(size_t) >=
+            _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+        return _address;
+    }
+    page * _page = _page_head(_thread, _address - sizeof(size_t));
+    // printf("lock page %p %p %ld\n", _page, _address, _page->_page_size);
+    if (_page->_page_size) {
+        _page->_page_size += 1;
+    } else {
+        // 测试是否是 extra 页面
+        page * _current = _thread->_page_extra;
+
+        for (int _i = _thread->_page_extra_size; _i > 0; _i --) {
+            // printf("lock travel %p\n", _current);
+            if (_current == _page) {
+                _page_remove(&_thread->_page_extra, _page);
+                _thread->_page_extra_size -= 1;
+                if (_thread->_page_extra_merge == _page) {
+                    _thread->_page_extra_merge = 0;
+                }
+                _page->_page_size += 1;
+                return _address;
+            }
+            _current = _current->_page_next;
+        }
+        raise(SIGABRT);
+    }
+    return _address;
+}
+
+static void _atom_set_extra_address_unblock(page * _thread, atom * _atom) {
+     //   printf("unlock atom %p\n", _atom);
+    size_t _size = _atom_get_extra_size(_atom);
+    if (_size + sizeof(size_t) >=
+            _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+        return;
+    }
+    void * _address = _atom_get_extra_address(_atom);
+    page * _page = _page_head(_thread, _address - sizeof(size_t));
+      //  printf("unlock page %p\n", _page);
+    _page->_page_size -= 1;
+    if (_page->_page_size == 0) {
+        _page_push(&_thread->_page_extra, _page);
+        _thread->_page_extra_size += 1;
+      //  printf("wooooo\n");
+        _page_extra_test(_thread, _page);
+         //       printf("wooooow\n");
+    }
 }
 
 #endif

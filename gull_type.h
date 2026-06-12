@@ -8,11 +8,11 @@
 
 #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
     #define _TYPE_INFO_BRIEF_64 4
-    #define _TYPE_INFO_CLOCK 5
+    #define _TYPE_INFO_CLOCK_64 5
 #else
-    #define _TYPE_INFO_INT64 4
-    #define _TYPE_INFO_UINT64 5
-    #define _TYPE_INFO_DOUBLE 6
+    #define _TYPE_INFO_LONG_32 4
+    #define _TYPE_INFO_UNSIGNED_LONG_32 5
+    #define _TYPE_INFO_DOUBLE_32 6
 #endif
 
 #define _TYPE_INFO_PAGE 7
@@ -74,13 +74,13 @@
 #define _TYPE_TEXT 65
 #define _TYPE_BYTES 66
 #define _TYPE_CACHE 67
-#define _TYPE_CLOCK 68
+#define _TYPE_CLOCK_32 68
 
 #define _TYPE_PAIR 80
 #define _TYPE_STRUCTURE 81
 #define _TYPE_SHARED 82
 
-#define _TYPE_CONTAINER_SIZE 10
+#define _TYPE_CONTAINER_SIZE 8
 #define _TYPE_CONTAINER_0 96
 #define _TYPE_CONTAINER_1 97
 #define _TYPE_CONTAINER_2 98
@@ -108,13 +108,13 @@
 #define _TYPE_CHAR 113
 #define _TYPE_SHORT 114
 #define _TYPE_INTEGER 115
-#define _TYPE_LONG 116
+#define _TYPE_LONG_64 116
 #define _TYPE_UNSGINED_CHAR 117
 #define _TYPE_UNSGINED_SHORT 118
 #define _TYPE_UNSGINED_INTEGER 119
-#define _TYPE_UNSGINED_LONG 120
+#define _TYPE_UNSGINED_LONG_64 120
 #define _TYPE_FLOAT 121
-#define _TYPE_DOUBLE 122
+#define _TYPE_DOUBLE_64 122
 
 #define _TYPE_DECIMAL 123
 #define _TYPE_DECIMAL_NEGATIVE 124
