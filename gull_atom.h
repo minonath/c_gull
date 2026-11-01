@@ -12,7 +12,7 @@ Gull 使用六个或者三个指针长度的结构储存数据
 TYPE    | FIRST ADDRESS | SECOND | THIRD  | FOURTH         | FIFTH | SIXTH
 recycle  0     reference previous next
 code     1     reference type     first    previous         current next
-tree     1     reference type     base     scan/loop/count  root    pair
+tree     1     reference type     base     scan/loop/cache  root    pair
 base     3     reference value    next
 node     3     parent    child    key      color/value      left    right
 pair     1     reference type     previous next             key     value
@@ -49,8 +49,7 @@ typedef struct {
         struct {
             size_t _atom_4_1: 1;
             size_t _atom_4_2: 1;
-            size_t _atom_4_3: 1;
-            size_t _atom_4_4: sizeof(size_t) * 8 - 3;
+            size_t _atom_4_3: sizeof(size_t) * 8 - 2;
         };
     };
     size_t _atom_5;
@@ -89,8 +88,8 @@ _ATOM_MEMBER_ACCESS_CAST(3)
 _ATOM_MEMBER_ACCESS_CAST(4)
 _ATOM_MEMBER_ACCESS(4_1)
 _ATOM_MEMBER_ACCESS(4_2)
-_ATOM_MEMBER_ACCESS(4_3)
-_ATOM_MEMBER_ACCESS_OFFSET(4_4, 3)
+// _ATOM_MEMBER_ACCESS(4_3)
+_ATOM_MEMBER_ACCESS_OFFSET(4_3, 2)
 _ATOM_MEMBER_ACCESS_CAST(5)
 _ATOM_MEMBER_ACCESS_CAST(6)
 
@@ -122,14 +121,16 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_get_code_next _atom_get_a6
 #define _atom_set_code_next _atom_set_a6
 
+#define _atom_get_container_cycle _atom_get_s3
+#define _atom_set_container_cycle _atom_set_s3
 #define _atom_get_container_scan _atom_get_s4_1
 #define _atom_set_container_scan _atom_set_s4_1
 #define _atom_get_container_loop _atom_get_s4_2
 #define _atom_set_container_loop _atom_set_s4_2
-#define _atom_get_container_cache _atom_get_s4_3
-#define _atom_set_container_cache _atom_set_s4_3
-#define _atom_get_container_count _atom_get_s4_4
-#define _atom_set_container_count _atom_set_s4_4
+#define _atom_get_container_cache _atom_get_a4_3
+#define _atom_set_container_cache _atom_set_a4_3
+// #define _atom_get_container_count _atom_get_s4_4
+// #define _atom_set_container_count _atom_set_s4_4
 /* tree 和 list 使用 container 数据 */
 
 #define _atom_get_tree_base _atom_get_a3
@@ -146,20 +147,25 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 
 #define _atom_get_node_parent _atom_get_a1_2
 #define _atom_set_node_parent _atom_set_a1_2
-#define _atom_get_node_child _atom_get_a2
-#define _atom_set_node_child _atom_set_a2
-#define _atom_get_node_key _atom_get_s3
-#define _atom_set_node_key _atom_set_s3
+#define _atom_copy_node_parent(a, b) _atom_set_s1_2(a, _atom_get_s1_2(b))
+#define _atom_get_node_left _atom_get_a2
+#define _atom_set_node_left _atom_set_a2
+#define _atom_get_node_right _atom_get_a3
+#define _atom_set_node_right _atom_set_a3
 #define _atom_get_node_color _atom_get_s4_1
 #define _atom_set_node_color _atom_set_s4_1
 #define _atom_set_node_black(one) _atom_set_s4_1(one, 0)
 #define _atom_set_node_red(one) _atom_set_s4_1(one, 1)
-#define _atom_get_node_value _atom_get_a4_4
-#define _atom_set_node_value _atom_set_a4_4
-#define _atom_get_node_left _atom_get_a5
-#define _atom_set_node_left _atom_set_a5
-#define _atom_get_node_right _atom_get_a6
-#define _atom_set_node_right _atom_set_a6
+#define _atom_copy_node_color(a, b) _atom_set_s4_1(a, _atom_get_s4_1(b))
+#define _atom_get_node_value_a _atom_get_a4_3
+#define _atom_set_node_value_a _atom_set_a4_3
+#define _atom_get_node_value_s _atom_get_s4_3
+#define _atom_set_node_value_s _atom_set_s4_3
+/* node_child 与 tree_root 使用相同指针，可以将 node 当做 tree 使用 */
+#define _atom_get_node_child _atom_get_a5
+#define _atom_set_node_child _atom_set_a5
+#define _atom_get_node_key _atom_get_s6
+#define _atom_set_node_key _atom_set_s6
 
 #define _atom_get_pair_previous _atom_get_a3
 #define _atom_set_pair_previous _atom_set_a3
@@ -193,8 +199,8 @@ static inline void * _atom_set_v5(atom * _atom, void * _value) {
 #define _atom_set_state_end _atom_set_s4_1
 #define _atom_get_state_branch _atom_get_s4_2
 #define _atom_set_state_branch _atom_set_s4_2
-#define _atom_get_state_index _atom_get_s4_4
-#define _atom_set_state_index _atom_set_s4_4
+#define _atom_get_state_index _atom_get_s4_3
+#define _atom_set_state_index _atom_set_s4_3
 #define _atom_get_state_outer _atom_get_a5
 #define _atom_set_state_outer _atom_set_a5
 #define _atom_get_state_inner _atom_get_a6
@@ -261,10 +267,12 @@ static inline size_t
 }
 
 #if (defined(__LP64__) && __LP64__) || (defined(_LP64) && _LP64)
-    #define _atom_get_clock_second (uint64_t) _atom_get_s2
-    #define _atom_set_clock_second (uint64_t) _atom_set_s2
-    #define _atom_get_clock_nano (uint64_t) _atom_get_s3
-    #define _atom_set_clock_nano (uint64_t) _atom_set_s3
+    #define _atom_get_clock_second(_atom) (uint64_t) _atom_get_s2(_atom)
+    #define _atom_set_clock_second(_atom, _value)                            \
+        (uint64_t) _atom_set_s2(_atom, _value)
+    #define _atom_get_clock_nano(_atom) (uint64_t) _atom_get_s3(_atom)
+    #define _atom_set_clock_nano(_atom, _value)                              \
+        (uint64_t) _atom_set_s3(_atom, _value)
 #else
     #define _ATOM_CLOCK_ACCESS(name, pointer)                                \
         static inline uint64_t _atom_get_##name(atom * _atom) {              \
@@ -458,23 +466,6 @@ static atom * _atom_pair_remove(atom ** _root, atom * _atom) {
     return _atom;
 }
 
-/* 单链表只会插入链表尾 */
-static atom * _atom_base_append(atom ** _root, atom * _atom) {
-    if (*_root) {
-        atom * _target = *_root;
-        while (_atom_get_base_next(_target)) {
-            _target = _atom_get_base_next(_target);
-        }
-        _atom_set_base_next(_target, _atom);
-        /* _atom_set_pair_previous(_atom, _target); // 此行被禁止 */
-    } else {
-        *_root = _atom;
-        /* _atom_set_pair_previous(_atom, 0); // 此行被禁止 */
-    }
-    _atom_set_base_next(_atom, 0);
-    return _atom;
-}
-
 static inline size_t _atom_type_is(atom * _atom, size_t _type) {
     return _atom->_atom_2 == _type;
 }
@@ -520,16 +511,8 @@ static inline size_t _atom_decrease_reference(atom * _atom) {
     return _atom->_atom_1_2 -= 1;
 }
 
-static inline atom ** _atom_get_tree_root_refer(atom * _atom) {
-    return (atom **) &_atom->_atom_5;
-}
-
-static inline atom ** _atom_get_tree_pair_refer(atom * _atom) {
-    return (atom **) &_atom->_atom_6;
-}
-
-static inline atom ** _atom_get_node_child_refer(atom * _atom) {
-    return (atom **) &_atom->_atom_2;
+static inline size_t _atom_dec_refer(atom * _atom, size_t _num) {
+    return _atom->_atom_1_2 -= _num;
 }
 
 #endif

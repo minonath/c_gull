@@ -26,7 +26,7 @@ typedef struct _gull_page page;
 
 typedef size_t (* _container_traversal) (page *, atom *, atom *, atom *);
 typedef void (* _container_count) (page *, atom *, atom *);
-typedef void (* _container_destroy) (page *, atom *, atom *);
+typedef void (* _container_release) (page *, atom *, size_t);
 
 struct _gull_page {
     /* 为了与原子兼容，第一、二个指针预留给 info reference 和 type */
@@ -81,8 +81,8 @@ struct _gull_page {
     signature _signature_generator; /* 进程签名生成器 */
 
     _container_traversal _container_traversals[_TYPE_CONTAINER_SIZE];
-    _container_count _container_counts[_TYPE_CONTAINER_SIZE];
-    _container_destroy _container_destroys[_TYPE_CONTAINER_SIZE];
+    _container_count _container_records[_TYPE_CONTAINER_SIZE];
+    _container_release _container_releases[_TYPE_CONTAINER_SIZE];
 
     page * _threads_shared;
     atom * _threads_by_signature; /* 线程签名储存 */
@@ -839,11 +839,10 @@ static atom * _atom_is_legal(page * _thread, void * _memory) {
 
 // #include <stdio.h>
 
-static void * _atom_get_extra_address_block(page * _thread, atom * _atom) {
+static inline void * _atom_get_extra_address_block(page * _thread, atom * _atom) {
     size_t _size = _atom_get_extra_size(_atom);
     void * _address = _atom_get_extra_address(_atom);
-    if (_size + sizeof(size_t) >=
-            _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+    if (_size + sizeof(size_t) >= _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
         return _address;
     }
     page * _page = _page_head(_thread, _address - sizeof(size_t));
@@ -872,11 +871,10 @@ static void * _atom_get_extra_address_block(page * _thread, atom * _atom) {
     return _address;
 }
 
-static void _atom_set_extra_address_unblock(page * _thread, atom * _atom) {
+static inline void _atom_set_extra_address_unblock(page * _thread, atom * _atom) {
      //   printf("unlock atom %p\n", _atom);
     size_t _size = _atom_get_extra_size(_atom);
-    if (_size + sizeof(size_t) >=
-            _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
+    if (_size + sizeof(size_t) >= _thread->_page_size - _PAGE_EXTEND_HEAD_SIZE) {
         return;
     }
     void * _address = _atom_get_extra_address(_atom);

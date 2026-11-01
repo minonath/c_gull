@@ -17,7 +17,7 @@ static inline atom * _list_append(
         page * _thread, atom * _list, atom * _value) {
     // printf(">>> %p\n", _value);
     _cache_push(_thread, _list, atom *, _value);
-    _reference_increase(_thread, _value);
+    _reference_increase(_thread, _list, _value);
     return _value;
 }
 
@@ -59,56 +59,49 @@ static void _list_remove(page * _thread, atom * _list, size_t _index) {
         _i = _j;
     }
     _atom_set_extra_used(_list, _size * sizeof(size_t));
-    _reference_decrease(_thread, _cache);
+    _reference_decrease(_thread, _list, _cache);
 }
 
 static size_t _list_traversal(
         page * _thread, atom* _scan, atom * _container, atom * _target) {
-
+    size_t _result = 0;
     size_t _size = _atom_get_extra_used(_container) / sizeof(atom *);
+
     if (_size == 0) return 0;
 
-    size_t _count = 0;
     atom ** _list = _atom_get_extra_address_block(_thread, _container);
     for (size_t _i = 0; _i < _size; _i ++) {
-        _count = _reference_merge_mark(_scan, _count, _reference_traversal(
-            _thread, _scan, _list[_i], _target), (size_t) _target);
+        _result |= _reference_traversal(_thread, _scan, _list[_i], _target);
     }
+
     _atom_set_extra_address_unblock(_thread, _container);
-    return _count;
+    if (_result) return _atom_set_container_loop(_container, 1);
+    return 0;
 }
 
-static void _list_count(page * _thread, atom* _scan, atom * _container) {
-
+static void _list_record(page * _thread, atom* _loop, atom * _container) {
+    _cache_push(_thread, _atom_get_a6(_loop), atom *, _container);
     size_t _size = _atom_get_extra_used(_container) / sizeof(atom *);
-    if (_size) {
-        atom ** _list = _atom_get_extra_address(_container);
-        for (size_t _i = 0; _i < _size; _i ++) {
-            _reference_count(_thread, _scan, _list[_i]);
-        }
+    if (_size == 0) return;
+    atom ** _list = _atom_get_extra_address(_container);
+    for (size_t _i = 0; _i < _size; _i ++) {
+        _tree_set_insert_container(_thread, _loop, _list[_i], 1);
     }
 }
 
-static void _list_destroy(page * _thread, atom * _atom, atom * _later) {
-    if (_later) {
+static void _list_release(page * _thread, atom * _atom, size_t _special) {
+    if (_special == 0) {
         size_t _size = _atom_get_extra_used(_atom) / sizeof(atom *);
         atom ** _list = _atom_get_extra_address_block(_thread, _atom);
         for (size_t _i = 0; _i < _size; _i ++) {
-            _reference_destroy(_thread, _list[_i], _later);
+            _reference_decrease(_thread, _atom, _list[_i]);
         }
         _atom_set_extra_address_unblock(_thread, _atom);
-        _atom_set_extra_used(_atom, 0);
-    } else {
-        size_t _size = _atom_get_extra_used(_atom) / sizeof(atom *);
-        atom ** _list = _atom_get_extra_address_block(_thread, _atom);
-        for (size_t _i = 0; _i < _size; _i ++) {
-            _reference_decrease(_thread, _list[_i]);
-        }
-        _atom_set_extra_address_unblock(_thread, _atom);
-        _atom_set_reference(_atom, 0);
-        _atom_set_extra_used(_atom, 0);
-        _cache_release_direct(_thread, _atom);
     }
+
+    // _atom_set_reference(_atom, 0);
+    // _atom_set_extra_used(_atom, 0);
+    _cache_release_direct(_thread, _atom);
 }
 
 #endif

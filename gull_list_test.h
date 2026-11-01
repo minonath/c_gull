@@ -12,12 +12,42 @@ int _index_of(atom ** _list, atom * _one, int _limit) {
     return -1;
 }
 
+static void _loop_cache_print_inner(atom * _node, size_t * _count) {
+    if (_atom_get_node_left(_node)) {
+        _loop_cache_print_inner(_atom_get_node_left(_node), _count);
+    }
+    if (_atom_get_node_right(_node)) {
+        _loop_cache_print_inner(_atom_get_node_right(_node), _count);
+    }
+    *_count += 1;
+    printf("....%ld : %p %ld\n", *_count,
+        _atom_get_node_key(_node), _atom_get_node_value_s(_node));
+}
+
+static void _loop_cache_print(atom * _loop) {
+    printf("loop cache : %p\n", _loop);
+    size_t _size = _atom_get_extra_used(
+        _atom_get_a6(_loop)) / sizeof(size_t);
+    printf("....size : %ld\n", _size);
+    printf("....reference : %ld\n", _atom_get_reference(_loop));
+    printf("....cycle : %ld\n", _atom_get_container_cycle(_loop));
+    atom ** _list = _atom_get_extra_address(_atom_get_a6(_loop));
+    for (size_t _i = 0; _i < _size; _i ++) {
+        printf("....%ld : %p\n", _i + 1, _list[_i]);
+    }
+    size_t _count = 0;
+    _loop_cache_print_inner(_atom_get_tree_root(_loop), &_count);
+}
+
 void gull_list_test() {
     page * _process = _page_allocate_process(_PAGE_SIZE_64K, 12);
-
-    _process->_container_traversals[0] = _list_traversal;
-    _process->_container_counts[0] = _list_count;
-    _process->_container_destroys[0] = _list_destroy;
+    
+    _process->_container_traversals[0] = _loop_cache_traversal;
+    _process->_container_records[0] = _loop_cache_record;
+    _process->_container_releases[0] = _loop_cache_release;
+    _process->_container_traversals[1] = _list_traversal;
+    _process->_container_records[1] = _list_record;
+    _process->_container_releases[1] = _list_release;
     printf("%ld\n", _process->_page_used);
 
     atom * _test[30] = {0};
@@ -25,7 +55,7 @@ void gull_list_test() {
         _test[_i] = _list_allocate(_process, 0);
     }
     _atom_set_reference(_test[0], 1);
-
+    
     /*
     0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 29 →→ 0
                     ↓
@@ -86,31 +116,38 @@ void gull_list_test() {
     _list_append(_process, _test[7], _test[29]);
     _list_append(_process, _test[29], _test[0]);
 
+    _list_append(_process, _test[26], _test[19]);
 
     for (int _i = 0; _i < 30; _i ++) {
-        printf("(%ld %ld %ld %ld %ld) ", _atom_get_reference(_test[_i]),
+        printf("(%ld: %ld %ld %ld %p) ", _i,
+            _atom_get_reference(_test[_i]),
             _atom_get_container_scan(_test[_i]),
             _atom_get_container_loop(_test[_i]),
-            _atom_get_container_cache(_test[_i]),
-            _atom_get_container_count(_test[_i]));
+            _atom_get_container_cache(_test[_i]));
     }
+
+    _loop_cache_print(_atom_get_container_cache(_test[11]));
+    printf("%ld\n", _process->_page_used);
+    _reference_decrease(_process, 0, _test[0]);
     printf("%ld\n", _process->_page_used);
 
-    _reference_decrease(_process, _test[0]);
-
+    /*
+    return;
     for (int _i = 0; _i < 30; _i ++) {
-        printf("(%ld %ld %ld %ld %ld) ", _atom_get_reference(_test[_i]),
+        printf("(%ld: %ld %ld %ld %p) ", _i,
+            _atom_get_reference(_test[_i]),
             _atom_get_container_scan(_test[_i]),
             _atom_get_container_loop(_test[_i]),
-            _atom_get_container_cache(_test[_i]),
-            _atom_get_container_count(_test[_i]));
+            _atom_get_container_cache(_test[_i]));
     }
-
+    printf("%ld\n", _process->_page_used);
+    return;
+    */
     #define MEW 3
     #define TEST (8000 * MEW)
     atom * _cache[TEST] = {0};
     atom * _root = _list_allocate(_process, 0);
-
+    
     printf("\n+++++++++++++++++%ld\n", _process->_page_used);
     for (int _i = 0; _i < TEST; _i ++) {
         _cache[_i] = _list_allocate(_process, 0);
@@ -120,66 +157,62 @@ void gull_list_test() {
 
     struct timespec _aaaa, _bbbb;
     clock_gettime(CLOCK_REALTIME, &_aaaa);
-
+    
     srand(time(0));
     for (int _i = 0; _i < TEST; _i += MEW) {
-        printf("%d\n", _i);
+        // printf("%d\n", _i);
         for(int _j = 0; _j <= (rand() % (3 * MEW)); _j ++) {
             _list_append(_process, _cache[_i], _cache[rand() % TEST]);
         }
         /*
         for (int _i = 0; _i < TEST; _i ++) {
-            printf("(index:%d %ld s:%ld l:%ld c:%ld %ld) ", _i,
+            printf("(index:%d %ld s:%ld l:%ld c:%p) ", _i,
                 _atom_get_reference(_cache[_i]),
                 _atom_get_container_scan(_cache[_i]),
                 _atom_get_container_loop(_cache[_i]),
-                _atom_get_container_cache(_cache[_i]),
-                _atom_get_container_count(_cache[_i]));
-        }
-        printf("\n");
-
-        for (int _i = 0; _i < TEST; _i ++) {
-            printf("< %d : ", _i);
-            size_t _size = _atom_get_extra_used(_cache[_i]) / sizeof(size_t);
-            atom ** _list = _atom_get_extra_address(_cache[_i]);
-            for (size_t _a = 0; _a < _size; _a ++) {
-                printf("%d ", _index_of(_cache, _list[_a], TEST));
+                _atom_get_container_cache(_cache[_i]));
             }
-            printf(">  ");
-        }
+            printf("\n");
+            
+            for (int _i = 0; _i < TEST; _i ++) {
+                printf("< %d : ", _i);
+                size_t _size = _atom_get_extra_used(_cache[_i]) / sizeof(size_t);
+                atom ** _list = _atom_get_extra_address(_cache[_i]);
+                for (size_t _a = 0; _a < _size; _a ++) {
+                    printf("%d ", _index_of(_cache, _list[_a], TEST));
+                }
+                printf(">  ");
+            }
         printf("\n");
         */
     }
     clock_gettime(CLOCK_REALTIME, &_bbbb);
-    printf("time spend %ld %ld %ld %ld\n",
-        _aaaa.tv_sec, _aaaa.tv_nsec, _bbbb.tv_sec, _bbbb.tv_nsec);
+    printf("time spend %ld %ld %ld %ld\n", _aaaa.tv_sec, _aaaa.tv_nsec, _bbbb.tv_sec, _bbbb.tv_nsec);
     // return;
-
+    
     printf("######### %ld\n", _process->_page_used);
     size_t _keep = _process->_page_used;
     for (int _i = TEST - 1; _i >= 0; _i --) {
-        printf("%d\n", _i);
+        // printf("%d\n", _i);
         _list_remove(_process, _root, _i);
         /*
         for (int _i = 0; _i < TEST; _i ++) {
-            printf("(index:%d %ld s:%ld l:%ld c:%ld %ld) ", _i,
+            printf("(index:%d %ld s:%ld l:%ld c:%p) ", _i,
                 _atom_get_reference(_cache[_i]),
                 _atom_get_container_scan(_cache[_i]),
                 _atom_get_container_loop(_cache[_i]),
-                _atom_get_container_cache(_cache[_i]),
-                _atom_get_container_count(_cache[_i]));
+                _atom_get_container_cache(_cache[_i]));
         }
         printf("\n");
         for (int _i = 0; _i < TEST; _i ++) {
             if (_atom_get_reference(_cache[_i])) {
                 printf("< %d : ", _i);
-                size_t _size =
-                    _atom_get_extra_used(_cache[_i]) / sizeof(size_t);
+                size_t _size = _atom_get_extra_used(_cache[_i]) / sizeof(size_t);
                 atom ** _list = _atom_get_extra_address(_cache[_i]);
                 for (size_t _a = 0; _a < _size; _a ++) {
                     int _p = _index_of(_cache, _list[_a], TEST);
                     if (_p == -1) {
-                        printf("error %p %ld %ld", _list, _a, _list[_a]);
+                        printf("error %p %ld %p", _list, _a, _list[_a]);
                         break;
                     } else {
                         printf("%d ", _p);
@@ -192,9 +225,9 @@ void gull_list_test() {
         printf("\n"); */
         // if ( _keep != _process->_page_used) break;
     }
+    _list_release(_process, _root, 0);
     clock_gettime(CLOCK_REALTIME, &_bbbb);
-    printf("time spend %ld %ld %ld %ld\n",
-        _aaaa.tv_sec, _aaaa.tv_nsec, _bbbb.tv_sec, _bbbb.tv_nsec);
+    printf("time spend %ld %ld %ld %ld\n", _aaaa.tv_sec, _aaaa.tv_nsec, _bbbb.tv_sec, _bbbb.tv_nsec);
     printf("%ld\n", _process->_page_used);
 }
 

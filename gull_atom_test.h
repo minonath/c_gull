@@ -25,9 +25,9 @@ void gull_atom_test() {
     _ATOM_MEMBER_TEST(%p, code_current, (atom *) 0x66666);
     _ATOM_MEMBER_TEST(%p, code_next, (atom *) 0x77777);
 
-    _ATOM_MEMBER_TEST(%zu, container_scanned, 0);
-    _ATOM_MEMBER_TEST(%zu, container_cycle, 0x88888); // 559240
-    _ATOM_MEMBER_TEST(%zu, container_scanned, 1);
+    _ATOM_MEMBER_TEST(%zu, container_scan, 0);
+    _ATOM_MEMBER_TEST(%zu, container_loop, 0x88888); // 559240
+    _ATOM_MEMBER_TEST(%zu, container_cache, (atom *) 1);
 
     _ATOM_MEMBER_TEST(%p, tree_base, (atom *) 0x99999);
     _ATOM_MEMBER_TEST(%p, tree_root, (atom *) 0xaaaaa);
@@ -41,7 +41,7 @@ void gull_atom_test() {
     _ATOM_MEMBER_TEST(%p, node_child, (atom *) 0xfffff);
     _ATOM_MEMBER_TEST(%zu, node_key, 0x1010101); // 16843009
     _ATOM_MEMBER_TEST(%zu, node_color, 1);
-    _ATOM_MEMBER_TEST(%p, node_value, (atom *) 0x2020202); // 结果应为 0x2020200
+    _ATOM_MEMBER_TEST(%p, node_value_a, (atom *) 0x2020202); // 结果应为 0x2020200
     _ATOM_MEMBER_TEST(%zu, node_color, 0);
     _ATOM_MEMBER_TEST(%p, node_left, (atom *) 0x3030303);
     _ATOM_MEMBER_TEST(%p, node_right, (atom *) 0x4040404);
