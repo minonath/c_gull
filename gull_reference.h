@@ -343,6 +343,10 @@ static inline void _reference_increase(
     _cache_push(_thread, _scan, atom *, _atom);
 
     // 进行遍历，不同原子类型遍历方法不同
+    if (_atom == _target) {
+        _atom_set_container_loop(_atom, 1);
+        _reference_combine(_thread, _scan);
+    } else 
     if (_thread->_container_traversals[_index](
             _thread, _scan, _atom, _target)) {
         // 返回真表示新建循环，需要重新构建循环缓存
